@@ -213,46 +213,6 @@ const create_plane_verticies = (angle_delta, scale_factor, plane_mask) => {
 	return position
 }
 
-// can I build a 3D representation of object using/extending old 2D vertex method?
-// 		
-const draw_shape = (angle_delta, scale_factor) => {
-	var position = [0,0,0]
-	var angle = 0
-	var i = 3
-	while (angle < 2*Math.PI + angle_delta) {
-		// xy plane vertices
-		const x_y_component_tranformation = 0
-		const x_y_angle = angle + x_y_component_tranformation
-	
-		position[i++] = scale_factor * Math.cos(x_y_angle) // X
-		position[i++] = scale_factor * Math.sin(x_y_angle) // Y	
-		position[i++] = 0 // Z
-		angle += angle_delta
-	}
-
-	while (angle < 2*Math.PI + angle_delta) {
-		// xz plane vertices
-		const x_y_component_tranformation = 0
-		const x_y_angle = angle + x_y_component_tranformation
-	
-		position[i++] = scale_factor * Math.cos(x_y_angle) // X
-		position[i++] = 0 // Y
-		position[i++] = scale_factor * Math.sin(x_y_angle) // Z	
-		angle += angle_delta
-	}
-
-	while (angle < 2*Math.PI + angle_delta) {
-		// yz plane vertices
-		const x_y_component_tranformation = 0
-		const x_y_angle = angle + x_y_component_tranformation
-	
-		position[i++] = scale_factor * Math.cos(x_y_angle) // X
-		position[i++] =  -1// Y
-		position[i++] = scale_factor * Math.sin(x_y_angle) // Z	
-		angle += angle_delta
-	}
-}
-
 // hexagon
 const angle_delta = Math.PI/2
 const positions = draw_round_adjacent_shape(angle_delta, 0.5)

@@ -10,14 +10,7 @@ const vecAdd = (a, b, dims) => {
 
 // because vector attribute stuff isn't normalizing..
 const normalize = (min, max, value) => {
-	const abs_min = Math.abs(min)
-	const abs_max = Math.abs(max)
-	
-	const scaled_value = Math.abs(abs_min + value)
-	const range = abs_min + abs_max
-
-	const norm_per = scaled_value/range
-
+	const norm_per = (value - min)/(max - min)
 	return (norm_per * 2) - 1 // because -1 to 1
 }
 
@@ -161,7 +154,6 @@ const drawFrame = () => {
 
 	const normalized_ball_position = [normalize(WORLD.bound.left, WORLD.bound.right, WORLD.ball.position[0]), normalize(WORLD.bound.bottom, WORLD.bound.top, WORLD.ball.position[1])]
 	const positions = drawShape(Math.PI/100, WORLD.ball.radius/100, normalized_ball_position)
-
 	const positionBuffer = gl.createBuffer();
 	gl.bindBuffer(gl.ARRAY_BUFFER, positionBuffer);
 	gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(positions), gl.STATIC_DRAW);
