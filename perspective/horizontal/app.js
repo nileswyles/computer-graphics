@@ -77,9 +77,8 @@ const vsSource = `
 	}
 `
 const fsSource = `
-	attribute vec4 a_color;
 	void main() {
-	gl_FragColor = a_color;
+	gl_FragColor = vec4(0.34, 1.0, 0.87, 1.0);
 	}
 `
 // Initialize a shader program this is where all the lighting
@@ -183,6 +182,7 @@ const draw = (z, zxangle, color) => {
 	
 	const fov = 135
 	const fov_rads = fov / 180 * Math.PI
+	
 	min = Math.sin(-fov_rads/2) * z
 	max = Math.sin(fov_rads/2) * z
 	// 
