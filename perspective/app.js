@@ -77,9 +77,8 @@ const vsSource = `
 	}
 `
 const fsSource = `
-	attribute vec4 a_color;
 	void main() {
-	gl_FragColor = a_color;
+	gl_FragColor = vec4(0.34, 1.0, 0.87, 1.0);
 	}
 `
 // Initialize a shader program this is where all the lighting

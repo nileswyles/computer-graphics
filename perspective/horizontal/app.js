@@ -1,3 +1,8 @@
+const normalize = (min, max, value, new_min, new_max) => {
+	const norm_per = (value - min)/(max - min)
+	return (norm_per * (new_max - new_min)) + new_min
+} // lol
+
 //
 // Initialize a shader program, so WebGL knows how to draw our data
 //
@@ -166,10 +171,6 @@ const draw = (z, zxangle, color) => {
 	console.log(`${z}, ${zxangle}`)
 	// this is how you listen to events just for this element no?	
 	// because vector attribute stuff isn't normalizing..
-	const normalize = (min, max, value, new_min, new_max) => {
-		const norm_per = (value - min)/(max - min)
-		return (norm_per * (new_max - new_min)) + new_min
-	}
 	z = normalize(1.0, 1000.0, z, 1.0, 5.0)
 	console.log(`z_normalized: ${z}`)
 	// adjust z by zx angle
@@ -185,13 +186,33 @@ const draw = (z, zxangle, color) => {
 	
 	min = Math.sin(-fov_rads/2) * z
 	max = Math.sin(fov_rads/2) * z
+	
+	console.log(`fov: ${fov}, min: ${min}, max: ${max}`)
 	// 
 	// And so basically as an optimization, rotation matrix includes -z * Math.sin(angle) for every element...
 	// 	then do vec addition in shader program?
 	for (let i = 0; i < positions.length; i++) {
 		if (i % 2 == 0) { // x component
-			var x_prime = positions[i] - z * Math.sin(zxangle)
-			positions[i] = normalize(min, max, x_prime, -1.0, 1.0)
+			var x_shift = z * Math.sin(zxangle)
+			// TODO: hmmmm...... shouldn't this result in same? lol why you know work?
+			//	*** (while also cropping any x values outside of field of range?? - let's ignore that edge case for now... and assume fov and Z is large enough for 45 degree rotation) ***
+
+				// this fov min max assumes centered at 0... x_shift changes that?
+				// hmm.....
+			// revisit - reason about this in words again...
+			
+			// this shifts and scales/trims
+			// or so I thought lol... 
+			// -1 + .707 = -.293
+			// 1 + .707 = 1.707
+			// FOV: updated from -2 - 2 (for example) to -1.293 to 2.707
+			// which should display, just the right half of the surface...
+			var x_prime = positions[i] + x_shift
+			positions[i] = normalize(min + x_shift, max - x_shift, x_prime, -1.0, 1.0)
+			// this shifts and but doesn't scale/trim
+			//var x_prime = positions[i] - x_shift
+			//positions[i] = normalize(min, max, x_prime, -1.0, 1.0)
+
 			// I think this is more correct than what I had before, but since viewport stuff is not making much sense, can't say for sure...
 			
 			// Let's revisit from the beginning...
@@ -203,10 +224,10 @@ const draw = (z, zxangle, color) => {
 			//		max = Math.sin(fov/2) * z
 			
 			//		TODO:
-			//		this means, a fov of 90 deg and z = 1 is identity?
+			//		this means, a fov of 180 deg and z = 1 is identity?
 			//			y = sin(fov) * z =  1
 			//			fov = arcsin(1/z) = 90 degrees
-			//		fov of approx. 8 deg and z = 7 is also identity?
+			//		fov of approx. 16 deg and z = 7 is also identity?
 			
 			// 	normalize data to that range... (while also cropping any x values outside of field of range?? - let's ignore that edge case for now... and assume fov and Z is large enough for 45 degree rotation)
 						
@@ -217,7 +238,7 @@ const draw = (z, zxangle, color) => {
 			// repeat for zy-plane, fov makes up a cone, so same normalization applies
 		} else { // y component
 			// adjust y along xy-plane? due to zx-rotation.
-			var y_prime = positions[i] - z * Math.sin(zyangle)
+			var y_prime = positions[i] + z * Math.sin(zyangle)
 			positions[i] = normalize(min, max, y_prime, -1.0, 1.0)
 		}
 	}
