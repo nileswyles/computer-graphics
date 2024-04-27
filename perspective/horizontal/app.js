@@ -107,7 +107,6 @@ window.addEventListener("change", (event) => {
 		document.getElementById("zxangle-label").textContent = document.getElementById("zxangle").value
 		document.getElementById("ztransform-label").textContent = document.getElementById("ztransform").value
 	}
-
 })
 
 const drawAll = (z, zxangle) => {
@@ -159,13 +158,17 @@ const setColor = () => {
 const draw = (z, zxangle, color) => {
 	gl.clearColor(0.0, 0.0, 0.0, 1.0)
 	gl.clear(gl.STENCIL_BUFFER_BIT | gl.DEPTH_BUFFER_BIT | gl.COLOR_BUFFER_BIT)
+	
+	const positions_range = [-1.0, 1.0]
 	const positions = [
 		1.0, 1.0, 
 		-1.0, 1.0, 
 		1.0, -1.0,
 		-1.0, -1.0
 	]
-	// this will rotate about origin which is middle of shape, which might not be desired behaviour but let's see. Might need to shift 90 degrees?
+	// this will rotate about origin which is middle of shape, which might not be desired behaviour but let's see. Might need to shift 90 degrees? 
+	
+	// 90 deg == 45 deg?
 	zxangle = zxangle/180 * Math.PI
 	zyangle = 0
 	console.log(`${z}, ${zxangle}`)
@@ -181,37 +184,37 @@ const draw = (z, zxangle, color) => {
 	console.log(`z_primex: ${z_primex}, z_primey: ${z_primey}`)
 	console.log(positions)
 	
-	const fov = 135
+	const fov = 180
 	const fov_rads = fov / 180 * Math.PI
 	
-	min = Math.sin(-fov_rads/2) * z
-	max = Math.sin(fov_rads/2) * z
-	
-	console.log(`fov: ${fov}, min: ${min}, max: ${max}`)
+	const fov_range = [Math.sin(-fov_rads/2) * z, Math.sin(fov_rads/2) * z]
+
+	console.log(`fov: ${fov}, min: ${fov_range[0]}, max: ${fov_range[1]}`)
 	// 
 	// And so basically as an optimization, rotation matrix includes -z * Math.sin(angle) for every element...
 	// 	then do vec addition in shader program?
 	for (let i = 0; i < positions.length; i++) {
+		let angle = 0
 		if (i % 2 == 0) { // x component
-			var x_shift = z * Math.sin(zxangle)
+			angle = zxangle
 			// TODO: hmmmm...... shouldn't this result in same? lol why you know work?
 			//	*** (while also cropping any x values outside of field of range?? - let's ignore that edge case for now... and assume fov and Z is large enough for 45 degree rotation) ***
 
 				// this fov min max assumes centered at 0... x_shift changes that?
 				// hmm.....
 			// revisit - reason about this in words again...
-			
-			// this shifts and scales/trims
-			// or so I thought lol... 
-			// -1 + .707 = -.293
-			// 1 + .707 = 1.707
-			// FOV: updated from -2 - 2 (for example) to -1.293 to 2.707
-			// which should display, just the right half of the surface...
-			var x_prime = positions[i] + x_shift
-			positions[i] = normalize(min + x_shift, max - x_shift, x_prime, -1.0, 1.0)
+
 			// this shifts and but doesn't scale/trim
 			//var x_prime = positions[i] - x_shift
 			//positions[i] = normalize(min, max, x_prime, -1.0, 1.0)
+			// CAP at position ranges, i.e. -1 and 1			
+			//var x_prime = positions[i] - Math.sin(zxangle)
+			//if (x_prime < positions_range[0]) {
+			//	x_prime = positions_range[0]
+			//} else if (x_prime > positions_range[1]) {
+			//	x_prime = positions_range[1]
+			//}
+			//positions[i] = normalize(fov_range[0], fov_range[1], x_prime, positions_range[0], positions_range[1])
 
 			// I think this is more correct than what I had before, but since viewport stuff is not making much sense, can't say for sure...
 			
@@ -237,10 +240,15 @@ const draw = (z, zxangle, color) => {
 			
 			// repeat for zy-plane, fov makes up a cone, so same normalization applies
 		} else { // y component
-			// adjust y along xy-plane? due to zx-rotation.
-			var y_prime = positions[i] + z * Math.sin(zyangle)
-			positions[i] = normalize(min, max, y_prime, -1.0, 1.0)
+			angle = zyangle
 		}
+		let p_prime = positions[i] - Math.sin(angle)			
+		if (p_prime < positions_range[0]) {
+			p_prime = positions_range[0]
+		} else if (p_prime > positions_range[1]) {
+			p_prime = positions_range[1]
+		}
+		positions[i] = normalize(fov_range[0], fov_range[1], p_prime, positions_range[0], positions_range[1])
 	}
 	console.log(positions)
 	// Create a buffer for the square's positions.
