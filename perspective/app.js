@@ -1,3 +1,54 @@
+// Vertex shader program
+//const vsSource = `
+//	
+//	struct surface {
+//		vec4 position;
+//		// can this be a thing? else use vec4?
+//		surface left;
+//		surface right;
+//		surface top;
+//		surface bottom;		
+//	};
+//	
+//	attribute vec4 a_position;
+//	
+//	void createObject(in vec4 front, in vec4 back, in vec4 left, in vec4 right, in vec4 top, in vec4 bottom) {
+//		surface front = surface(front);
+//		surface back = surface(back);
+//		surface left = surface(left);
+//		surface right = surface(right);
+//		surface top = surface(top);
+//		surface back = surface(bottom);
+//	} 
+//	
+//	void main() {
+//	gl_Position = a_position;
+//	}
+//`
+
+// Vertex shader program
+const vsSource = `
+	attribute vec4 a_position;
+	void main() {
+	gl_Position = a_position;
+	}
+`
+const fsSource = `
+	void main() {
+	gl_FragColor = vec4(0.34, 1.0, 0.87, 1.0);
+	}
+`;
+const fsSource2 = `
+	void main() {
+	gl_FragColor = vec4(0.777, 0.214, 0.820, 1.0);
+	}
+`;
+
+const normalize = (min, max, value, new_min, new_max) => {
+	const norm_per = (value - min)/(max - min)
+	return (norm_per * (new_max - new_min)) + new_min
+} // lol
+
 //
 // Initialize a shader program, so WebGL knows how to draw our data
 //
@@ -69,21 +120,25 @@ function resizeCanvasToDisplaySize(canvas) {
   return needResize
 }
 
-// Vertex shader program
-const vsSource = `
-	attribute vec4 a_position;
-	void main() {
-	gl_Position = a_position;
+var surfaces = [
+	{
+		positions: [	
+			1.0, 1.0, -1.0, 1.0, 
+			
+			1.0, -1.0, -1.0, -1.0
+		],
+		
+		
 	}
-`
-const fsSource = `
-	void main() {
-	gl_FragColor = vec4(0.34, 1.0, 0.87, 1.0);
-	}
-`
+
+]
+
+
 // Initialize a shader program this is where all the lighting
 // for the vertices and so forth is established.
 const program = initShaderProgram(gl, vsSource, fsSource)
+const program2 = initShaderProgram(gl, vsSource, fsSource2)
+
 // black canvas
 gl.clearColor(0.0, 0.0, 0.0, 1.0)
 gl.clear(gl.STENCIL_BUFFER_BIT | gl.DEPTH_BUFFER_BIT | gl.COLOR_BUFFER_BIT)
@@ -92,25 +147,31 @@ console.log(`${gl.canvas.width}, ${gl.canvas.height} BLAH BLAH`)
 
 // TODO: this here makes no sense...
 gl.viewport(gl.canvas.width/2 - 250, gl.canvas.height/2 - 250, 500, 500)
-// Tell WebGL to use our program when drawing
-gl.useProgram(program)
 // 
 window.addEventListener("change", (event) => {
 	console.log(event)
-	if (event.target.id === "ztransform" || event.target.id === "zxangle") { 
+	if (event.target.id === "ztransform" || event.target.id === "zxangle" || event.target.id === "zyangle") { 
 		drawAll()
-		document.getElementById("zxangle-label").textContent = document.getElementById("zxangle").value
-		document.getElementById("ztransform-label").textContent = document.getElementById("ztransform").value
 	}
-
 })
 
 const drawAll = (z, zxangle) => {
-	draw(document.getElementById("ztransform").valueAsNumber, document.getElementById("zxangle").valueAsNumber)
+	document.getElementById("zxangle-label").textContent = document.getElementById("zxangle").value
+	document.getElementById("zyangle-label").textContent = document.getElementById("zyangle").value
+	document.getElementById("ztransform-label").textContent = document.getElementById("ztransform").value
+	gl.clearColor(0.0, 0.0, 0.0, 1.0)
+	gl.clear(gl.STENCIL_BUFFER_BIT | gl.DEPTH_BUFFER_BIT | gl.COLOR_BUFFER_BIT)
+	gl.useProgram(program)
+	draw(document.getElementById("ztransform").valueAsNumber, document.getElementById("zxangle").valueAsNumber, document.getElementById("zyangle").valueAsNumber, program)
+	
+	// if 
+	
+	gl.useProgram(program2)
+	draw(document.getElementById("ztransform").valueAsNumber, -document.getElementById("zxangle").valueAsNumber, -document.getElementById("zyangle").valueAsNumber, program2)
 	// draw other
 	//vec4(0.34, 1.0, 0.87, 1.0)
 	//draw(document.getElementById("ztransform").value, )
-	drawOutline()
+	//drawOutline()
 }
 
 const drawOutline = () => {
@@ -151,40 +212,25 @@ const setColor = () => {
 	gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(outline_positions), gl.STATIC_DRAW)
 }
 
-const draw = (z, zxangle, color) => {
-	gl.clearColor(0.0, 0.0, 0.0, 1.0)
-	gl.clear(gl.STENCIL_BUFFER_BIT | gl.DEPTH_BUFFER_BIT | gl.COLOR_BUFFER_BIT)
-	// hardcoded square... 
-	//const positions = [
-	//	// triangle 1
-	//	1.0, 1.0, 
-	//	-1.0, 1.0, 
-	//	1.0, -1.0, 
-	//	// triangle 2
-	//	1.0, 1.0, 
-	//	1.0, -1.0, 
-	//	-1.0, -1.0
-	//]
+const draw = (z, zxangle, zyangle, pg) => {
+	
+	const positions_range = [-1.0, 1.0]
 	const positions = [
 		1.0, 1.0, 
 		-1.0, 1.0, 
 		1.0, -1.0,
 		-1.0, -1.0
 	]
-	// 180 == Math.PI
-	// 60 == in radians 60/180 * Math.PI
-	// convert to radians
-
-	// this will rotate about origin which is middle of shape, which might not be desired behaviour but let's see. Might need to shift 90 degrees?
+	
+	// TODO:
+	// this will rotate about origin which is middle of shape, which might not be desired behaviour but let's see. Might need to shift 90 degrees? 
+	// 90 deg == 45 deg?
 	zxangle = zxangle/180 * Math.PI
-	zyangle = 0
-	console.log(`${z}, ${zxangle}`)
+	zyangle = zyangle/180 * Math.PI
+	
+	console.log(`${z}, zxangle: ${zxangle}, zyangle: ${zyangle}`)
 	// this is how you listen to events just for this element no?	
 	// because vector attribute stuff isn't normalizing..
-	const normalize = (min, max, value, new_min, new_max) => {
-		const norm_per = (value - min)/(max - min)
-		return (norm_per * (new_max - new_min)) + new_min
-	}
 	z = normalize(1.0, 1000.0, z, 1.0, 5.0)
 	console.log(`z_normalized: ${z}`)
 	// adjust z by zx angle
@@ -194,49 +240,31 @@ const draw = (z, zxangle, color) => {
 	// if z == 1 and angle 0, then 1 duh... 
 	console.log(`z_primex: ${z_primex}, z_primey: ${z_primey}`)
 	console.log(positions)
-	var mins = [-1, -1]
-	var maxs = [1, 1]
-	// 
-	// And so basically as an optimization, rotation matrix includes -z * Math.sin(angle) for every element...
-	// 	then do vec addition in shader program?
+	
+	const fov = 90
+	const fov_rads = fov / 180 * Math.PI
+	const fov_range = [Math.sin(-fov_rads/2) * z, Math.sin(fov_rads/2) * z]
+	console.log(`fov: ${fov}, min: ${fov_range[0]}, max: ${fov_range[1]}`)
 	for (let i = 0; i < positions.length; i++) {
-		// TODO:
-		// tan function / arctan doing something interesting here... but because I don't have to scale by Z and just set to y component of that angle? that's interesting... look into why ... more pythagorean theorem/unit circle magic
-
-		// TODO: just realized, perspective means y value changes too...
-		// skip y components.
+		let angle = 0
 		if (i % 2 == 0) { // x component
-			// get angle from perspective of camera
-			// okay, so it looks like, this results in a range of -1 * delta_x --- 1 * delta_x (i.e. camera coordinates...)
-			// scaled_x component - point in range 1 to -1
-			var x_prime = positions[i] - z * Math.sin(zxangle)
-			positions[i] = x_prime
-			//mins[0] = Math.min(mins[0], x_prime)
-			//maxs[0] = Math.max(maxs[0], x_prime)
+			angle = zxangle
 		} else { // y component
-			// adjust y along xy-plane? due to zx-rotation.
-			var y_prime = positions[i] - z * Math.sin(zyangle)
-			positions[i] = y_prime
-			//mins[1] = Math.min(mins[1], y_prime)
-			//maxs[1] = Math.max(maxs[1], y_prime)
-			// get angle from perspective of camera
-			//var y_prime = (z * Math.sin(zyangle)) - positions[i]
-			//const range = 2
-			// x value * scaled by 
-			//const x_position_scaled = -positions[i - 1] 
-			//const y_component = Math.sin(Math.PI/2 - zxangle)
-			//console.log(`${x_position_scaled}, ${y_component} ${x_position_scaled * y_component/2}`)
-			//positions[i] = positions[i] - (x_position_scaled * y_component)/2
-			//mins[1] = Math.min(mins[1], y_prime)
-			//maxs[1] = Math.max(maxs[1], y_prime)
+			angle = zyangle
 		}
+		let p_prime = positions[i] - Math.sin(angle)			
+		if (p_prime < positions_range[0]) {
+			p_prime = positions_range[0]
+		} else if (p_prime > positions_range[1]) {
+			p_prime = positions_range[1]
+		}
+		positions[i] = normalize(fov_range[0], fov_range[1], p_prime, positions_range[0], positions_range[1])
 	}
 	console.log(positions)
-	// Create a buffer for the square's positions.
 	const positionBuffer = gl.createBuffer()
 	gl.bindBuffer(gl.ARRAY_BUFFER, positionBuffer)
 	gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(positions), gl.STATIC_DRAW)
-	const positionAttributeLocation = gl.getAttribLocation(program, "a_position")
+	const positionAttributeLocation = gl.getAttribLocation(pg, "a_position")
 	// TODO: the object coordinates make no sense, since not normalizing...
 	const numComponents = 2
 	gl.vertexAttribPointer(
@@ -252,3 +280,26 @@ const draw = (z, zxangle, color) => {
 }
 
 drawAll()
+
+document.addEventListener("mousemove", logKey);
+
+var previous_x = 0
+var previous_y = 0
+
+function logKey(e) {
+  //console.log(`Screen X/Y: ${e.screenX}, ${e.screenY}
+    //Client X/Y: ${e.clientX}, ${e.clientY}`);
+	
+	const delta_x = e.clientX - previous_x
+	const delta_y = e.clientY - previous_y
+
+	
+	if (Math.abs(delta_y) > 17 || Math.abs(delta_x) > 17) {
+		document.getElementById("zxangle").value = `${document.getElementById("zxangle").valueAsNumber + delta_x}`
+		document.getElementById("zyangle").value = `${document.getElementById("zyangle").valueAsNumber + delta_y}`
+		previous_x = e.clientX
+				previous_y = e.clientY
+		drawAll()
+
+	}
+}

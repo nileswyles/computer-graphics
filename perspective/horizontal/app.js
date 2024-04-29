@@ -102,15 +102,16 @@ gl.useProgram(program)
 // 
 window.addEventListener("change", (event) => {
 	console.log(event)
-	if (event.target.id === "ztransform" || event.target.id === "zxangle") { 
+	if (event.target.id === "ztransform" || event.target.id === "zxangle" || event.target.id === "zyangle") { 
 		drawAll()
-		document.getElementById("zxangle-label").textContent = document.getElementById("zxangle").value
-		document.getElementById("ztransform-label").textContent = document.getElementById("ztransform").value
 	}
 })
 
 const drawAll = (z, zxangle) => {
-	draw(document.getElementById("ztransform").valueAsNumber, document.getElementById("zxangle").valueAsNumber)
+	document.getElementById("zxangle-label").textContent = document.getElementById("zxangle").value
+	document.getElementById("zyangle-label").textContent = document.getElementById("zyangle").value
+	document.getElementById("ztransform-label").textContent = document.getElementById("ztransform").value
+	draw(document.getElementById("ztransform").valueAsNumber, document.getElementById("zxangle").valueAsNumber, document.getElementById("zyangle").valueAsNumber)
 	// draw other
 	//vec4(0.34, 1.0, 0.87, 1.0)
 	//draw(document.getElementById("ztransform").value, )
@@ -155,7 +156,7 @@ const setColor = () => {
 	gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(outline_positions), gl.STATIC_DRAW)
 }
 
-const draw = (z, zxangle, color) => {
+const draw = (z, zxangle, zyangle, color) => {
 	gl.clearColor(0.0, 0.0, 0.0, 1.0)
 	gl.clear(gl.STENCIL_BUFFER_BIT | gl.DEPTH_BUFFER_BIT | gl.COLOR_BUFFER_BIT)
 	
@@ -170,7 +171,8 @@ const draw = (z, zxangle, color) => {
 	
 	// 90 deg == 45 deg?
 	zxangle = zxangle/180 * Math.PI
-	zyangle = 0
+	zyangle = zyangle/180 * Math.PI
+	
 	console.log(`${z}, ${zxangle}`)
 	// this is how you listen to events just for this element no?	
 	// because vector attribute stuff isn't normalizing..
@@ -184,7 +186,7 @@ const draw = (z, zxangle, color) => {
 	console.log(`z_primex: ${z_primex}, z_primey: ${z_primey}`)
 	console.log(positions)
 	
-	const fov = 180
+	const fov = 90
 	const fov_rads = fov / 180 * Math.PI
 	
 	const fov_range = [Math.sin(-fov_rads/2) * z, Math.sin(fov_rads/2) * z]
@@ -249,6 +251,52 @@ const draw = (z, zxangle, color) => {
 			p_prime = positions_range[1]
 		}
 		positions[i] = normalize(fov_range[0], fov_range[1], p_prime, positions_range[0], positions_range[1])
+		
+		// Now, need to do this for all surfaces in 3D space...
+		
+		// The z value described so far is distance from the camera to center of object, since we have been operating in 2D space... 
+		//	The size of the object displayed is consequently a function of fov angle and z-distance lol.
+		//	
+		
+		// Things to know:
+		//	At most 3 surfaces displayed on screen at any given moment for a combination of zx-zy-angles
+		//	Those 3 surfaces are a "projection" of the closest to camera (min(distance)).
+		// 	
+		
+		// can we think of cube surfaces (for instance), like this:
+		
+		/*
+							* * *
+							* 6 *
+							* * *
+							- - -
+							* * *
+							* 4 *
+							* * * 
+							- - -
+			* * * |	* * * | * * * | * * * | * * *
+			* 6 * |	* 3 * | * 1 * | * 2 * | * 6 *
+			* * * |	* * * | * * * | * * * | * * *
+							- - -
+							* * *
+							* 5 *
+							* * * 
+							- - -
+							* * *
+							* 6 *
+							* * *
+							
+			this structure can apply to all shapes/polygons?
+				1 || 6
+				2 || 3
+				4 || 5
+				
+			Creating this data structure, means rotations are just shifts? Then we don't even need to care about identifying which surface is being displayed and just bring vertices in as needed?
+			
+			Additionally can make the optimization of creating the array buffer... then use element index buffer to select verticies being selected... 
+			
+			How search converges so nicely lol (DFS)... this was only made possibly by deciding to shift instead of scale...
+		*/		    
 	}
 	console.log(positions)
 	// Create a buffer for the square's positions.
