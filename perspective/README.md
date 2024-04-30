@@ -80,6 +80,10 @@ TODO: hmmmm...... shouldn't this result in same? lol why you know work?
 			bottom
 		}
 		
+	Turns out this flat representation of the object really only facilitates single axis rotations... obviously? 
+	
+	In any case, let's start by defining the object surfaces in 3D space...
+		
 	GLSL do this?
 	
 	 For a sphere, ?

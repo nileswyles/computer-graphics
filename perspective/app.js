@@ -131,7 +131,6 @@ function resizeCanvasToDisplaySize(canvas) {
 // Initialize a shader program this is where all the lighting
 // for the vertices and so forth is established.
 const program = initShaderProgram(gl, vsSource, fsSource)
-const program2 = initShaderProgram(gl, vsSource, fsSource2)
 
 // black canvas
 gl.clearColor(0.0, 0.0, 0.0, 1.0)
@@ -246,129 +245,106 @@ const drawSurface = (pg, surface) => {
 }
 
 const draw = (z, zxangle, zyangle, pg) => {
-	const surface_dimensions = [-1.0, 1.0]
-	const surfaces = {
-		FRONT: {
-			color: [0.777, 0.214, 0.820, 1.0],
-			positions: [
-				-1.0, 1.0, // TOP LEFT
-				1.0, 1.0, // TOP RIGHT
-				-1.0, -1.0, // BOTTOM LEFT
-						
-				1.0, 1.0, // TOP RIGHT
-				1.0, -1.0, // BOTTOM RIGHT
-				-1.0, -1.0, // BOTTOM LEFT
-			]
-		},
-	}
-	// the following creates the datastructure representing the 3D surfaces (for, in this instance, a cube...)
-	const side_length = surfaces.FRONT.positions.length
+	const unit_dimensions = [-1.0, 1.0]
 	
 	const OPPOSITE_COLOR = [0.34, 1.0, 0.87, 1.0]
-	
-	surfaces.LEFT = {
-		color: [0.27, 0.5, 0.37, 1.0],
-		positions: []
-	}
-	for (let i = 0; i < side_length; i++) {
-		// x - 2, == LEFT ADJACENT SIDE,
-		if (i % 2 == 0) { // x - component
-			surfaces.LEFT.positions.push(surfaces.FRONT.positions[i] - 2.0);
-		} else {
-			surfaces.LEFT.positions.push(surfaces.FRONT.positions[i])
+	const surfaces = {
+		
+		// parallel to XY-plane
+		
+		FRONT: {
+			color: [0.777, 0.214, 0.820, 1.0],
+			// X == -1 - 1 (LEFT - RIGHT)
+			// Y == -1 - 1 (BOTTOM - TOP)
+			// Z == -1 - 1 (BACK - FRONT)
+			positions: [
+				-1.0, 1.0, 1.0,		// TOP LEFT
+				1.0, 1.0,  1.0,		// TOP RIGHT
+				-1.0, -1.0, 1.0,		// BOTTOM LEFT
+
+				1.0, 1.0,   1.0,		// TOP RIGHT
+				1.0, -1.0,  1.0,		// BOTTOM RIGHT
+				-1.0, -1.0, 1.0 	// BOTTOM LEFT
+			]
+		},
+		BACK: {
+			color: [0.777, 0.901, 0.820, 1.0],
+			// X == -1 - 1 (LEFT - RIGHT)
+			// Y == -1 - 1 (BOTTOM - TOP)
+			// Z == -1 - 1 (BACK - FRONT)
+			positions: [
+				-1.0, 1.0, -1.0,		// TOP LEFT
+				1.0, 1.0, -1.0,		// TOP RIGHT
+				-1.0, -1.0, -1.0,	// BOTTOM LEFT
+
+				1.0, 1.0, -1.0,		// TOP RIGHT
+				1.0, -1.0, -1.0,		// BOTTOM RIGHT
+				-1.0, -1.0, -1.0 	// BOTTOM LEFT
+			]
+		},
+		
+		// parallel to YZ-plane
+		LEFT: {
+			color: [0.27, 0.5, 0.37, 1.0],
+			// X == -1 - 1 (LEFT - RIGHT)
+			// Y == -1 - 1 (BOTTOM - TOP)
+			// Z == -1 - 1 (BACK - FRONT)
+			positions: [
+				-1.0, -1.0, 1.0,		
+				-1.0, 1.0, 1.0,	
+				-1.0, -1.0, -1.0,		
+
+				-1.0, 1.0, 1.0,	
+				-1.0, 1.0, -1.0,	
+				-1.0, -1.0, -1.0	
+			]
+		},
+		RIGHT: {
+			color: [0.60, 1.0, 0.7, 1.0],
+			positions: [
+				1.0, -1.0, 1.0,		
+				1.0, 1.0, 1.0,	
+				1.0, -1.0, -1.0,
+
+				1.0, 1.0, 1.0,	
+				1.0, 1.0, -1.0,		
+				1.0, -1.0, -1.0 
+			]
+		},
+		
+		// parallel to XZ-plane
+		
+		BOTTOM: {
+			// X == -1 - 1 (LEFT - RIGHT)
+			// Y == -1 - 1 (BOTTOM - TOP)
+			// Z == -1 - 1 (BACK - FRONT)
+			color: [0.09, 0.28, 0.81, 1.0],
+			positions: [
+				-1.0, -1.0, 1.0,	
+				1.0, -1.0, 1.0,	
+				-1.0, -1.0, -1.0,	
+
+				1.0, -1.0, 1.0,	
+				1.0, -1.0, -1.0,
+				-1.0, -1.0, -1.0 	
+			]
+		},
+		TOP: {
+			color: [0.49, 0.58, 0.69, 1.0],
+			positions: [
+				-1.0, 1.0, 1.0,	
+				1.0, 1.0, 1.0,	
+				-1.0, 1.0, -1.0,	
+
+				1.0, 1.0, 1.0,	
+				1.0, 1.0, -1.0,
+				-1.0, 1.0, -1.0 
+			]
 		}
 	}
+	const side_length = surfaces.FRONT.positions.length
 	
-	surfaces.RIGHT = {
-		color: [0.60, 1.0, 0.7, 1.0],
-		positions: []
-	}
-	for (let i = 0; i < side_length; i++) {
-		// x + 2, == RIGHT ADJACENT SIDE,
-		if (i % 2 == 0) { // x - component
-			surfaces.RIGHT.positions.push(surfaces.FRONT.positions[i] + 2.0);
-		} else {
-			surfaces.RIGHT.positions.push(surfaces.FRONT.positions[i])
-		}
-	}
-	
-	surfaces.LEFT_OPPOSITE = {
-		color: OPPOSITE_COLOR,
-		positions: []
-	}
-	for (let i = 0; i < side_length; i++) {
-		// x - 4, == OPPOSITE/FAR SIDE,
-		if (i % 2 == 0) { // x - component
-			surfaces.LEFT_OPPOSITE.positions.push(surfaces.FRONT.positions[i] - 4.0);
-		} else {
-			surfaces.LEFT_OPPOSITE.positions.push(surfaces.FRONT.positions[i])
-		}
-	}
-	
-	surfaces.RIGHT_OPPOSITE = {
-		color: OPPOSITE_COLOR,
-		positions: []
-	}
-	for (let i = 0; i < side_length; i++) {
-		// x + 4, == OPPOSITE FAR SIDE,
-		if (i % 2 == 0) { // x - component
-			surfaces.RIGHT_OPPOSITE.positions.push(surfaces.FRONT.positions[i] + 4.0);
-		} else {
-			surfaces.RIGHT_OPPOSITE.positions.push(surfaces.FRONT.positions[i])
-		}
-	}	
-	
-	surfaces.BOTTOM = {
-		color: [0.09, 0.28, 0.81, 1.0],
-		positions: []
-	}
-	for (let i = 0; i < side_length; i++) {
-		// y - 2, == BOTTOM ADJACENT SIDE,
-		if (i % 2 == 1) { // y - component
-			surfaces.BOTTOM.positions.push(surfaces.FRONT.positions[i] - 2.0);
-		} else {
-			surfaces.BOTTOM.positions.push(surfaces.FRONT.positions[i])
-		}
-	}
-	
-	surfaces.TOP = {
-		color: [0.49, 0.58, 0.69, 1.0],
-		positions: []
-	}
-	for (let i = 0; i < side_length; i++) {
-		// y + 2, == TOP ADJACENT SIDE,
-		if (i % 2 == 1) { // y - component
-			surfaces.TOP.positions.push(surfaces.FRONT.positions[i] + 2.0);
-		} else {
-			surfaces.TOP.positions.push(surfaces.FRONT.positions[i])
-		}
-	}
-	
-	surfaces.OPPOSITE_BOTTOM = {
-		color: OPPOSITE_COLOR,
-		positions: []
-	}
-	for (let i = 0; i < side_length; i++) {
-		// y - 4, == OPPOSITE/FAR SIDE,
-		if (i % 2 == 1) { // y - component
-			surfaces.OPPOSITE_BOTTOM.positions.push(surfaces.FRONT.positions[i] + 4.0);
-		} else {
-			surfaces.OPPOSITE_BOTTOM.positions.push(surfaces.FRONT.positions[i])
-		}
-	}
-	
-	surfaces.OPPOSITE_TOP = {
-		color: OPPOSITE_COLOR,
-		positions: []
-	}
-	for (let i = 0; i < side_length; i++) {
-		// y + 4, == OPPOSITE FAR SIDE,
-		if (i % 2 == 1) { // y - component
-			surfaces.OPPOSITE_TOP.positions.push(surfaces.FRONT.positions[i] + 4.0);
-		} else {
-			surfaces.OPPOSITE_TOP.positions.push(surfaces.FRONT.positions[i])
-		}
-	}	
+	// alright so we have 3D representation of object... now we can define rotation of object 
 
 	// TODO:
 	// this will rotate about origin which is middle of shape, which might not be desired behaviour but let's see. Might need to shift 90 degrees? 
@@ -396,58 +372,76 @@ const draw = (z, zxangle, zyangle, pg) => {
 	for (const [LABEL, SURFACE] of Object.entries(surfaces)) {
 		console.log(SURFACE)
 		const surface_in_view = { color: SURFACE.color, positions: [] }
-		for (let i = 0; i < SURFACE.positions.length; i++) {
-			let angle = 0
-			if (i % 2 == 0) { // x component
-				angle = zxangle
-			} else { // y component
-				angle = zyangle
-			}
-			// p_prime == point after rotation about origin of object (in other words, bottom end of object when rotated... LOL)
-				// but satelites YO!
-			// 	since it's all relative, moving camera by angle about origin is same as rotating the object about origin?
-			// 		Assuming Z = 1 at least?
+		
+		let i = 0;
+		while (i < SURFACE.positions.length) {			
+			// because 3 dims
+			const vertex = SURFACE.positions.slice(i, i + 3)
+			i += 3 
 			
-			// don't actually want to subtract by y-component to get p_prime but instead by distance between c and c_prime?
-			// 	don't think it matters... This just controls how much it rotates... It can be remapped to whatever scale in the frontend.
-			let p_prime = SURFACE.positions[i] - Math.sin(angle)
-			// select only vertices within surface_dimensions centered at p_prime...
+			// rotated == vertex * rotation
+			//				1x3 * 3x3 = 1x3? 
 			
-			// cap any edge vertices down past surface_dimensions to surface_dimensions...
-			//	But only for surface within surface_dimensions window?
-			// 		If I cap all, do triangle primitives it get drawn as straight line or not at all?? 
-			// 		Let's assume open gl has a way of handling that for now...
-			//			check for duplicates?
+			// rotated[0] = 
+			//		vertex[0] * rotation[0][0] +
+			//		vertex[1] * rotation[0][1] +
+			// 		vertex[2] * rotation[0][2]
 			
-			if (p_prime < surface_dimensions[0]) {
-				p_prime = surface_dimensions[0]
-			} else if (p_prime > surface_dimensions[1]) {
-				p_prime = surface_dimensions[1]
-			}
-			// finish the triangles, 
-			// done?
-			// hm.... no, this is wrong....
-			// want to select vertices in 
+			//							second column, first element
+			// rotated[1] = 
+			//		vertex[0] * rotation[1][0] +
+			//		vertex[1] * rotation[1][1] +
+			// 		vertex[2] * rotation[1][2]
 			
-			// check for duplicates????
-			
-			console.log(p_prime)
-			
-			
-			// new data structure because surfaces might have other attributes? like, color, texture?
-			
-			//surface_in_view.positions.push(normalize(fov_range[0], fov_range[1], p_prime, surface_dimensions[0], surface_dimensions[1]))
-			surface_in_view.positions.push(normalize(...fov_range, p_prime, ...surface_dimensions))
+			// third column
+			// rotated[2] = 
+			//		vertex[0] * rotation[2][0] +
+			//		vertex[1] * rotation[2][1] +
+			// 		vertex[2] * rotation[2][2]
 
+			// NO ROLLING! :)
+			
+			// gamma, LOL
+			xyangle = 0
+			
+			// x horizontal, y vertical, z towards me
+			// yaw = zxangle
+			// pitch = zyangle
+			// roll = xyangle
+			
+			// alpha == zxangle, beta == zyangle
+			const alpha = zxangle
+			const beta = zyangle
+			const gamma = xyangle
+			// see included PDF for reference.
+			// 	only defining needed? hmm... all are needed for calculating rotation lol..
+			const rotation = [
+				[Math.cos(alpha)*Math.cos(gamma), 	Math.cos(alpha)*Math.sin(beta)*Math.sin(gamma) - Math.sin(alpha)*Math.cos(gamma),	Math.cos(alpha)*Math.sin(beta)*Math.cos(gamma) + Math.sin(alpha)*Math.sin(gamma)],
+				[Math.sin(alpha)*Math.cos(beta),	Math.sin(alpha)*Math.sin(beta)*Math.sin(gamma) + Math.cos(alpha)*Math.cos(gamma),	Math.cos(alpha)*Math.sin(beta)*Math.sin(gamma) - Math.sin(alpha)*Math.cos(gamma)],
+				[-Math.sin(beta),	Math.cos(beta)*Math.sin(gamma), 	Math.cos(beta)*Math.cos(gamma)]
+			]
+			
+			rotated = []
+			rotated[0] = 
+				vertex[0] * rotation[0][0] +
+				vertex[1] * rotation[0][1] +
+				vertex[2] * rotation[0][2]
+			rotated[1] = 
+				vertex[0] * rotation[1][0] +
+				vertex[1] * rotation[1][1] +
+				vertex[2] * rotation[1][2]
+			rotated[2] = 
+				vertex[0] * rotation[2][0] +
+				vertex[1] * rotation[2][1] +
+				vertex[2] * rotation[1][2];
+			
+			console.log(rotated)
+			rotated[0] = normalize(...fov_range, rotated[0], ...unit_dimensions)
+			rotated[1] = normalize(...fov_range, rotated[1], ...unit_dimensions)
+			rotated[2] = normalize(...fov_range, rotated[2], ...unit_dimensions)
+			console.log(rotated)
 		}
 		console.log(surface_in_view)
-		
-		// brevvvvvvvvv cmon brevvvvvvvvvv wtf
-		// gl.clearColor(...SURFACE.color)
-		// gl.clear(gl.COLOR_BUFFER_BIT)
-		
-		// huh??//???????????????????
-		
 		drawSurface(pg, surface_in_view)
 	}
 }
