@@ -83,4 +83,7 @@ TODO: hmmmm...... shouldn't this result in same? lol why you know work?
 	GLSL do this?
 	
 	 For a sphere, ?
+	 
+	 
+	Hmm....
 */		    
