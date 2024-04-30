@@ -36,7 +36,7 @@ const vsSource = `
 	attribute vec4 a_position;
 	attribute vec4 lol;
 	
-	varying lowp vec4 vColor;
+	varying highp vec4 vColor;
 
 	void main() {
 	gl_Position = a_position;
@@ -44,11 +44,17 @@ const vsSource = `
 	}
 `
 const fsSource = `
-	varying lowp vec4 vColor;
+	varying highp vec4 vColor;
 	void main() {
 	gl_FragColor = vColor; 
 	}
 `;
+
+//const fsSource = `
+//	void main() {
+//	gl_FragColor = vec4(1.0, 1.0, 1.0, 1.0); 
+//	}
+//`;
 
 const normalize = (min, max, value, new_min, new_max) => {
 	const norm_per = (value - min)/(max - min)
@@ -216,24 +222,26 @@ const setColor = (pg, color) => {
 	);
 	gl.enableVertexAttribArray(colorAttributeLocation);
 	gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(color), gl.STATIC_DRAW)
-
 	// There must be a better way than passing this through the vertex shader program. Can we pass data directly to fragment shader?
+	//gl.deleteBuffer(buffer);
 }
 
 const drawSurface = (pg, surface) => {
 	setColor(pg, surface.color)
+	
+	console.log("drawing surface...")
 	
 	const positionBuffer = gl.createBuffer()
 	gl.bindBuffer(gl.ARRAY_BUFFER, positionBuffer)
 	gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(surface.positions), gl.STATIC_DRAW)
 	const positionAttributeLocation = gl.getAttribLocation(pg, "a_position")
 	// TODO: the object coordinates make no sense, since not normalizing...
-	const numComponents = 2
+	const numComponents = 3
 	gl.vertexAttribPointer(
 		positionAttributeLocation,
 		numComponents,
 		gl.FLOAT,
-		true, // normalization flag does nothing?
+		false, // normalization flag does nothing?
 		0,
 		0, // how many bytes inside the buffer to start from
 	)
@@ -249,9 +257,7 @@ const draw = (z, zxangle, zyangle, pg) => {
 	
 	const OPPOSITE_COLOR = [0.34, 1.0, 0.87, 1.0]
 	const surfaces = {
-		
 		// parallel to XY-plane
-		
 		FRONT: {
 			color: [0.777, 0.214, 0.820, 1.0],
 			// X == -1 - 1 (LEFT - RIGHT)
@@ -378,29 +384,7 @@ const draw = (z, zxangle, zyangle, pg) => {
 			// because 3 dims
 			const vertex = SURFACE.positions.slice(i, i + 3)
 			i += 3 
-			
-			// rotated == vertex * rotation
-			//				1x3 * 3x3 = 1x3? 
-			
-			// rotated[0] = 
-			//		vertex[0] * rotation[0][0] +
-			//		vertex[1] * rotation[0][1] +
-			// 		vertex[2] * rotation[0][2]
-			
-			//							second column, first element
-			// rotated[1] = 
-			//		vertex[0] * rotation[1][0] +
-			//		vertex[1] * rotation[1][1] +
-			// 		vertex[2] * rotation[1][2]
-			
-			// third column
-			// rotated[2] = 
-			//		vertex[0] * rotation[2][0] +
-			//		vertex[1] * rotation[2][1] +
-			// 		vertex[2] * rotation[2][2]
-
 			// NO ROLLING! :)
-			
 			// gamma, LOL
 			xyangle = 0
 			
@@ -416,30 +400,45 @@ const draw = (z, zxangle, zyangle, pg) => {
 			// see included PDF for reference.
 			// 	only defining needed? hmm... all are needed for calculating rotation lol..
 			const rotation = [
-				[Math.cos(alpha)*Math.cos(gamma), 	Math.cos(alpha)*Math.sin(beta)*Math.sin(gamma) - Math.sin(alpha)*Math.cos(gamma),	Math.cos(alpha)*Math.sin(beta)*Math.cos(gamma) + Math.sin(alpha)*Math.sin(gamma)],
-				[Math.sin(alpha)*Math.cos(beta),	Math.sin(alpha)*Math.sin(beta)*Math.sin(gamma) + Math.cos(alpha)*Math.cos(gamma),	Math.cos(alpha)*Math.sin(beta)*Math.sin(gamma) - Math.sin(alpha)*Math.cos(gamma)],
-				[-Math.sin(beta),	Math.cos(beta)*Math.sin(gamma), 	Math.cos(beta)*Math.cos(gamma)]
+				[
+					Math.cos(alpha)*Math.cos(gamma), 	
+					Math.cos(alpha)*Math.sin(beta)*Math.sin(gamma) - Math.sin(alpha)*Math.cos(gamma),	
+					Math.cos(alpha)*Math.sin(beta)*Math.cos(gamma) + Math.sin(alpha)*Math.sin(gamma)
+				],
+				[
+					Math.sin(alpha)*Math.cos(beta),	
+					Math.sin(alpha)*Math.sin(beta)*Math.sin(gamma) + Math.cos(alpha)*Math.cos(gamma),
+					Math.cos(alpha)*Math.sin(beta)*Math.sin(gamma) - Math.sin(alpha)*Math.cos(gamma)
+				],
+				[
+					-Math.sin(beta), 
+					Math.cos(beta)*Math.sin(gamma),
+					Math.cos(beta)*Math.cos(gamma)
+				]
 			]
+						
+			// rotated == vertex * rotation
+			//				1x3 * 3x3 = 1x3? 
+			rotated = [] // rotation_vector??? so need to add to original?
 			
-			rotated = []
-			rotated[0] = 
-				vertex[0] * rotation[0][0] +
-				vertex[1] * rotation[0][1] +
-				vertex[2] * rotation[0][2]
-			rotated[1] = 
-				vertex[0] * rotation[1][0] +
-				vertex[1] * rotation[1][1] +
-				vertex[2] * rotation[1][2]
-			rotated[2] = 
-				vertex[0] * rotation[2][0] +
-				vertex[1] * rotation[2][1] +
-				vertex[2] * rotation[1][2];
+			// don't forget to sum... lol... ? foooobarrrrrr 
+			rotated[0] = (vertex[0] * rotation[0][0] + vertex[1] * rotation[0][1] + vertex[2] * rotation[0][2]) + vertex[0]
+			rotated[1] = (vertex[0] * rotation[1][0] + vertex[1] * rotation[1][1] + vertex[2] * rotation[1][2]) + vertex[1]
+			rotated[2] = (vertex[0] * rotation[2][0] + vertex[1] * rotation[2][1] + vertex[2] * rotation[2][2]) + vertex[2]
 			
-			console.log(rotated)
+			console.log(`ROTATED: ${rotated}`)
 			rotated[0] = normalize(...fov_range, rotated[0], ...unit_dimensions)
 			rotated[1] = normalize(...fov_range, rotated[1], ...unit_dimensions)
 			rotated[2] = normalize(...fov_range, rotated[2], ...unit_dimensions)
-			console.log(rotated)
+			
+			// have rotated object, now 
+			console.log(`ROTATED AND NORMALIZED: ${rotated}`)
+		
+			
+			// okay so this isn't it, but progress?? lol 
+			surface_in_view.positions.push(rotated[0])
+			surface_in_view.positions.push(rotated[1])
+			surface_in_view.positions.push(rotated[2])
 		}
 		console.log(surface_in_view)
 		drawSurface(pg, surface_in_view)
@@ -464,8 +463,8 @@ function logKey(e) {
 	if (Math.abs(delta_y) > 17 || Math.abs(delta_x) > 17) {
 		//document.getElementById("zxangle").value = `${document.getElementById("zxangle").valueAsNumber + delta_x}`
 		//document.getElementById("zyangle").value = `${document.getElementById("zyangle").valueAsNumber + delta_y}`
-		previous_x = e.clientX
-				previous_y = e.clientY
+		//previous_x = e.clientX
+		//		previous_y = e.clientY
 		//drawAll()
 
 	}

@@ -90,4 +90,26 @@ TODO: hmmmm...... shouldn't this result in same? lol why you know work?
 	 
 	 
 	Hmm....
+	
+	Journey notes/summary:
+		THIS?
+		When viewing a 3D object even if it's rotated.
+			How to represent depth in 2D? you don't! right? so just show sin-component of rotations, and center orient axis appropriately... 
+		
+		Why didn't what I had work?
+		
+		hmm... derp... each successive rotation is from the rotated point, meaning... need to rotate per axis individually then flatten... I thought I could leverage the fact that zx_angle, zy_angle were perpindicular (orthogonal) to each other but that was wrong because z-axis common to both? The logic I had would probabbly work for all combinations of angles if the 2 axis were zx and xy or zy and xy? - actually no, that's also wrong.... 
+		
+		the only correct way to do it is.... represent object in 3D space...
+		perform rotation in yaw (can define that however you want?)
+		perform pitch rotation of *rotated yaw point*
+		perform roll rotation of *rotated pitch point*
+		
+		Then you get a point that can be expressed by rotation in all degrees of freedom, AND/OR none at all (obviously)...
+
+			The rotation matrix defined in the code, captures those transformations in a concise way.
+
+		Need to figure out why rotation matrix defined is producing the rotated point when multiplied by the original point instead of a rotation vector as described by "Wikipedia" and my testing in 2D space lol... Just another way of describing the rotation? probably. but why isn't it consistent?
+		
+		More exercises and testing using euler angles and rotation matricies TBD....
 */		    
