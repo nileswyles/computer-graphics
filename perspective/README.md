@@ -25,19 +25,7 @@
  The z value described so far is distance from the camera to center of object, since we have been operating in 2D space... 
 	The size of the object displayed is consequently a function of fov angle and z-distance lol.
 	
-Journey notes/summary:
-	THIS?
-	When viewing a 3D object even if it's rotated.
-		How to represent depth in 2D? you don't! right? so just show sin-component of rotations, and center orient axis appropriately... 
-	
-	Why didn't what I had work?
-	
-	hmm... derp... each successive rotation is from the rotated point, meaning... need to rotate per axis individually then flatten... 
-	
-	I thought I could leverage the fact that we only considered the sin-component of rotation but that didnt work out as expected? Thought it might have something to do with Gimbal locking or at least the phenonemon behind it (coupling of the 3 dimensions, or rather "shape" of 3 dimensions?)... still TBD....
-
-	The logic I had would probabbly work for all combinations of angles if the 2 axis were zx and xy or zy and xy? - actually no, that's also wrong.... 
-	
+Journey notes/summary:	
 	the only correct way to do it is.... represent object in 3D space...
 	perform rotation in yaw (can define that however you want?)
 	perform pitch rotation of *rotated yaw point*
@@ -65,3 +53,28 @@ Let's think about what the best/correct way of thinking about rotations or movem
 			- contradictions, we are all hypocrites! lol
 
 - It's effectively the same thing? Just perspective?
+
+
+Glossary (because words spark ideas...)
+
+Quaternions - Basically polar coordinate notation of more than 2D space. Can be used to perform some interesting maths. "Specifically, they encode information about an axis-angle rotation about an arbitrary axis." 
+
+Gimbal Locking - Loss of degrees of freedom. Occurs when axis are aligned and become parallel to each other. Resolved by reset? or adding an extra degree of freedom (Quats).
+		- i.e. When the pitch (xz) and yaw (yz) gimbals become aligned, changes to roll (xy) and yaw (yz) apply the same rotation to the airplane. Given the following order of rotations, roll, yaw, pitch? or pitch, yaw, roll? --- you get the idea.
+
+Euler Angles (not Eigen Vectors/Values) - The Euler angles are three angles introduced by Leonhard Euler to describe the orientation of a rigid body with respect to a fixed coordinate system. They can also represent the orientation of a mobile frame of reference in physics or the orientation of a general basis in 3-dimensional linear algebra. You know 2D rotations but in 3D.
+
+Unit Circle/Vector
+
+Rotation Matrices
+
+More euler stuff - 
+	eulers identity! :)
+		e^i*pi + 1 = 0
+		when x == pi
+		# cosign is real son!
+		e^ix = cos(x) + isin(x)?
+	
+	e = 2.71 ...
+	
+	

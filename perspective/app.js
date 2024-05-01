@@ -1,10 +1,11 @@
 // Data structures
-const OPPOSITE_COLOR = [0.34, 1.0, 0.87, 1.0]
 const cube = {
-	unit_dimensions: [-1.0, 1.0],
+	// TODO: typescript? static checking???? LMAO 
+	
 	// parallel to XY-plane
 	FRONT: {
-		color: [0.777, 0.214, 0.820, 1.0],
+		//color: [0.777, 0.214, 0.820, 1.0],
+		color: [1.0, 1.0, 1.0, 1.0],
 		// X == -1 - 1 (LEFT - RIGHT)
 		// Y == -1 - 1 (BOTTOM - TOP)
 		// Z == -1 - 1 (BACK - FRONT)
@@ -19,7 +20,8 @@ const cube = {
 		]
 	},
 	BACK: {
-		color: [0.777, 0.901, 0.820, 1.0],
+		//color: [0.777, 0.901, 0.820, 1.0],
+		color: [1.0, 0.0, 0.0, 1.0],
 		// X == -1 - 1 (LEFT - RIGHT)
 		// Y == -1 - 1 (BOTTOM - TOP)
 		// Z == -1 - 1 (BACK - FRONT)
@@ -36,7 +38,8 @@ const cube = {
 	
 	// parallel to YZ-plane
 	LEFT: {
-		color: [0.27, 0.5, 0.37, 1.0],
+		//color: [0.27, 0.5, 0.37, 1.0],
+		color: [0.0, 1.0, 0.0, 1.0],
 		// X == -1 - 1 (LEFT - RIGHT)
 		// Y == -1 - 1 (BOTTOM - TOP)
 		// Z == -1 - 1 (BACK - FRONT)
@@ -51,7 +54,8 @@ const cube = {
 		]
 	},
 	RIGHT: {
-		color: [0.60, 1.0, 0.7, 1.0],
+		//color: [0.60, 1.0, 0.7, 1.0],
+		color: [0.0, 0.0, 1.0, 1.0],
 		positions: [
 			1.0, -1.0, 1.0,		
 			1.0, 1.0, 1.0,	
@@ -69,7 +73,8 @@ const cube = {
 		// X == -1 - 1 (LEFT - RIGHT)
 		// Y == -1 - 1 (BOTTOM - TOP)
 		// Z == -1 - 1 (BACK - FRONT)
-		color: [0.09, 0.28, 0.81, 1.0],
+		//color: [0.09, 0.28, 0.81, 1.0],
+		color: [1.0, 1.0, 0.0, 1.0],
 		positions: [
 			-1.0, -1.0, 1.0,	
 			1.0, -1.0, 1.0,	
@@ -81,7 +86,8 @@ const cube = {
 		]
 	},
 	TOP: {
-		color: [0.49, 0.58, 0.69, 1.0],
+		//color: [0.49, 0.58, 0.69, 1.0],
+		color: [1.0, 0.0, 1.0, 1.0],
 		positions: [
 			-1.0, 1.0, 1.0,	
 			1.0, 1.0, 1.0,	
@@ -102,7 +108,7 @@ const vsSource = `
 	attribute vec4 a_position;
 	attribute vec4 lol;
 	
-	varying highp vec4 vColor;
+	varying lowp vec4 vColor;
 
 	void main() {
 	gl_Position = a_position;
@@ -110,7 +116,7 @@ const vsSource = `
 	}
 `
 const fsSource = `
-	in vColor;
+	varying lowp vec4 vColor;
 	void main() {
 	gl_FragColor = vColor; 
 	}
@@ -205,15 +211,16 @@ function resizeCanvasToDisplaySize(canvas) {
 const program = initShaderProgram(gl, vsSource, fsSource)
 
 const handleDrawEvent = (object) => {
-	document.getElementById("zxangle-label").textContent = document.getElementById("zxangle").value
-	document.getElementById("zyangle-label").textContent = document.getElementById("zyangle").value
+	document.getElementById("xzangle-label").textContent = document.getElementById("xzangle").value
+	document.getElementById("yzangle-label").textContent = document.getElementById("yzangle").value
 	document.getElementById("ztransform-label").textContent = document.getElementById("ztransform").value
 	
 	gl.clearColor(0.0, 0.0, 0.0, 1.0)
 	gl.clear(gl.STENCIL_BUFFER_BIT | gl.DEPTH_BUFFER_BIT | gl.COLOR_BUFFER_BIT)
 	
 	gl.useProgram(program)
-	draw(object, document.getElementById("ztransform").valueAsNumber, document.getElementById("zxangle").valueAsNumber, document.getElementById("zyangle").valueAsNumber, program)
+	console.log(object)
+	draw(object, document.getElementById("ztransform").valueAsNumber, document.getElementById("xzangle").valueAsNumber, document.getElementById("yzangle").valueAsNumber, program)
 }
 
 const drawOutline = () => {
@@ -254,6 +261,8 @@ const setColor = (pg, color) => {
 	const buffer = gl.createBuffer()
 	const colorAttributeLocation = gl.getAttribLocation(pg, "lol")
 	
+	var colors = [...color, ...color, ...color, ...color, ...color, ...color];
+	
 	const numComponents = 4;
 	const type = gl.FLOAT;
 	const normalize = false;
@@ -269,7 +278,7 @@ const setColor = (pg, color) => {
 		offset
 	);
 	gl.enableVertexAttribArray(colorAttributeLocation);
-	gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(color), gl.STATIC_DRAW)
+	gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(colors), gl.STATIC_DRAW)
 	// There must be a better way than passing this through the vertex shader program. Can we pass data directly to fragment shader?
 	//gl.deleteBuffer(buffer);
 }
@@ -284,6 +293,9 @@ const drawSurface = (pg, surface) => {
 	gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(surface.positions), gl.STATIC_DRAW)
 	const positionAttributeLocation = gl.getAttribLocation(pg, "a_position")
 	// TODO: the object coordinates make no sense, since not normalizing...
+	
+	// Per MDN Docs, webgl_modelview_projection pdf included (grain-of-salt?):
+	// The Z depth in the squares determines what gets drawn on top when the squares share the same space. The smaller Z values are rendered on top of the larger Z values.
 	const numComponents = 3
 	gl.vertexAttribPointer(
 		positionAttributeLocation,
@@ -300,29 +312,22 @@ const drawSurface = (pg, surface) => {
 	gl.deleteBuffer(positionBuffer)
 }
 
-const draw = (object, z, zxangle, zyangle, pg) => {	
-	zxangle = zxangle/180 * Math.PI
-	zyangle = zyangle/180 * Math.PI
-	
-	console.log(`${z}, zxangle: ${zxangle}, zyangle: ${zyangle}`)
-	// this is how you listen to events just for this element no?	
-	// because vector attribute stuff isn't normalizing..
+const draw = (object, z, xzangle, yzangle, pg) => {	
+	xzangle = xzangle/180 * Math.PI
+	yzangle = yzangle/180 * Math.PI
+	console.log(`${z}, xzangle: ${xzangle}, yzangle: ${yzangle}`)
 	z = normalize(1.0, 1000.0, z, 1.0, 5.0)
 	console.log(`z_normalized: ${z}`)
-	// adjust z by zx angle
-	z_primex = (z * Math.cos(zxangle))
-	z_primey = (z * Math.cos(zyangle))
-	
-	// if z == 1 and angle 0, then 1 duh... 
+	z_primex = (z * Math.cos(xzangle))
+	z_primey = (z * Math.cos(yzangle))	
 	console.log(`z_primex: ${z_primex}, z_primey: ${z_primey}`)
 	
 	const fov = 180
 	const fov_rads = fov / 180 * Math.PI
 	const fov_range = [Math.sin(-fov_rads/2) * z, Math.sin(fov_rads/2) * z]
 	console.log(`fov: ${fov}, min: ${fov_range[0]}, max: ${fov_range[1]}`)
-	
 	for (const [LABEL, SURFACE] of Object.entries(object)) {
-		console.log(SURFACE)
+		console.log(`SURFACE ${SURFACE}`)
 		const surface_in_view = { color: SURFACE.color, positions: [] }
 		
 		let i = 0;
@@ -331,58 +336,43 @@ const draw = (object, z, zxangle, zyangle, pg) => {
 			const vertex = SURFACE.positions.slice(i, i + 3)
 			i += 3 
 			// NO ROLLING! :)
-			// gamma, LOL
-			xyangle = 0
-			
-			// x horizontal, y vertical, z towards me
-			// yaw = zxangle
-			// pitch = zyangle
-			// roll = xyangle
-			
-			// alpha == zxangle, beta == zyangle
-			const alpha = zxangle
-			const beta = zyangle
-			const gamma = xyangle
-			// see included PDF for reference.
-			// 	only defining needed? hmm... all are needed for calculating rotation lol..
-			
-			// Describing it in code as described in the README, is probably better in the long run... Much more intuitive but much less performant?
-			const rotation = [
-				[
-					Math.cos(alpha)*Math.cos(gamma), 	
-					Math.cos(alpha)*Math.sin(beta)*Math.sin(gamma) - Math.sin(alpha)*Math.cos(gamma),	
-					Math.cos(alpha)*Math.sin(beta)*Math.cos(gamma) + Math.sin(alpha)*Math.sin(gamma)
-				],
-				[
-					Math.sin(alpha)*Math.cos(beta),	
-					Math.sin(alpha)*Math.sin(beta)*Math.sin(gamma) + Math.cos(alpha)*Math.cos(gamma),
-					Math.cos(alpha)*Math.sin(beta)*Math.sin(gamma) - Math.sin(alpha)*Math.cos(gamma)
-				],
-				[
-					-Math.sin(beta), 
-					Math.cos(beta)*Math.sin(gamma),
-					Math.cos(beta)*Math.cos(gamma)
-				]
-			]
 						
-			// rotated == vertex * rotation
-			//				1x3 * 3x3 = 1x3? 
-			rotated = [] // rotation_vector??? so need to add to original?
+			// x horizontal, y vertical, z towards me
+			// yaw = xzangle
+			// pitch = yzangle
+			// roll = xyangle
+
+			// 2D rotation matrix
+			//X' = Xcos(90) - Ysin(90)
+			//Y' = Xsin(90) + Ycos(90)
+			// vertex == x,y,z
 			
-			// don't forget to sum... lol... ? foooobarrrrrr 
-			rotated[0] = (vertex[0] * rotation[0][0] + vertex[1] * rotation[0][1] + vertex[2] * rotation[0][2]) + vertex[0]
-			rotated[1] = (vertex[0] * rotation[1][0] + vertex[1] * rotation[1][1] + vertex[2] * rotation[1][2]) + vertex[1]
-			rotated[2] = (vertex[0] * rotation[2][0] + vertex[1] * rotation[2][1] + vertex[2] * rotation[2][2]) + vertex[2]
+			// TODO: move this operation to OPENGL land. So that only data required by OPENGL on each draw are angles?....
+			//		Also load objects (including textures, etc) ahead of time, if possible....?
 			
-			console.log(`ROTATED: ${rotated}`)
-			rotated[0] = normalize(...fov_range, rotated[0], ...object.unit_dimensions)
-			rotated[1] = normalize(...fov_range, rotated[1], ...object.unit_dimensions)
-			rotated[2] = normalize(...fov_range, rotated[2], ...object.unit_dimensions)
+			// 	or generate LARGE table of all possible rotations ahead of time in JS runtime? over optimization?
 			
-			// have rotated object, now 
+			// yaw rotation	- xz axis	
+			const yaw_rotated = []
+			yaw_rotated[0] = vertex[0]*Math.cos(xzangle) - vertex[2]*Math.sin(xzangle)
+			yaw_rotated[1] = vertex[1]
+			yaw_rotated[2] = vertex[0]*Math.sin(xzangle) + vertex[2]*Math.cos(xzangle)
+
+			// pitch rotation - yz axis
+			const yaw_pitch_rotated = []
+			yaw_pitch_rotated[0] = yaw_rotated[0]
+			yaw_pitch_rotated[1] = yaw_rotated[1]*Math.cos(yzangle) - yaw_rotated[2]*Math.sin(yzangle)
+			yaw_pitch_rotated[2] = yaw_rotated[1]*Math.sin(yzangle) + yaw_rotated[2]*Math.cos(yzangle)
+			
+			const UNIT_DIMENSIONS = [-1.0, 1.0]
+			// remember this does z shift (shrinks object in view)
+			const rotated = []
+			rotated[0] = normalize(...fov_range, yaw_pitch_rotated[0], ...UNIT_DIMENSIONS)
+			rotated[1] = normalize(...fov_range, yaw_pitch_rotated[1], ...UNIT_DIMENSIONS)
+			rotated[2] = normalize(...fov_range, yaw_pitch_rotated[2], ...UNIT_DIMENSIONS)
+			
 			console.log(`ROTATED AND NORMALIZED: ${rotated}`)
 
-			// okay so this isn't it, but progress?? lol 
 			surface_in_view.positions.push(rotated[0])
 			surface_in_view.positions.push(rotated[1])
 			surface_in_view.positions.push(rotated[2])
@@ -394,7 +384,7 @@ const draw = (object, z, zxangle, zyangle, pg) => {
 
 window.addEventListener("change", (event) => {
 	console.log(event)
-	if (event.target.id === "ztransform" || event.target.id === "zxangle" || event.target.id === "zyangle") { 
+	if (event.target.id === "ztransform" || event.target.id === "xzangle" || event.target.id === "yzangle") { 
 		handleDrawEvent(cube)
 	}
 })
@@ -409,11 +399,11 @@ function logKey(e) {
 	const delta_x = e.clientX - previous_x
 	const delta_y = e.clientY - previous_y
 	if (Math.abs(delta_y) > 17 || Math.abs(delta_x) > 17) {
-		//document.getElementById("zxangle").value = `${document.getElementById("zxangle").valueAsNumber + delta_x}`
-		//document.getElementById("zyangle").value = `${document.getElementById("zyangle").valueAsNumber + delta_y}`
-		//previous_x = e.clientX
-		//		previous_y = e.clientY
-		//handleDrawEvent()
+		document.getElementById("xzangle").value = `${document.getElementById("xzangle").valueAsNumber + delta_x}`
+		document.getElementById("yzangle").value = `${document.getElementById("yzangle").valueAsNumber + delta_y}`
+		previous_x = e.clientX
+		previous_y = e.clientY
+		handleDrawEvent(cube)
 
 	}
 }

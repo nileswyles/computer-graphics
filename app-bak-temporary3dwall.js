@@ -223,6 +223,7 @@ gl.bindBuffer(gl.ARRAY_BUFFER, positionBuffer);
 // i.e. 
 // 		xz-plane
 
+//		this gives us point transformed from 0,0, so need to add point components to this to get point_prime or move origin..
 //		z = Math.sin(angle)
 // 		x = Math.cos(angle)
 
