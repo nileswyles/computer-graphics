@@ -57,7 +57,7 @@ Let's think about what the best/correct way of thinking about rotations or movem
 
 Glossary (because words spark ideas...)
 
-Quaternions - Basically polar coordinate notation of more than 2D space. Can be used to perform some interesting maths. "Specifically, they encode information about an axis-angle rotation about an arbitrary axis." 
+Quaternions - Basically polar coordinate (complex number) notation of more than 2D space. Can be used to perform some interesting maths. "Specifically, they encode information about an axis-angle rotation about an arbitrary axis." 
 
 Gimbal Locking - Loss of degrees of freedom. Occurs when axis are aligned and become parallel to each other. Resolved by reset? or adding an extra degree of freedom (Quats).
 		- i.e. When the pitch (xz) and yaw (yz) gimbals become aligned, changes to roll (xy) and yaw (yz) apply the same rotation to the airplane. Given the following order of rotations, roll, yaw, pitch? or pitch, yaw, roll? --- you get the idea.
