@@ -76,5 +76,3 @@ More euler stuff -
 		e^ix = cos(x) + isin(x)?
 	
 	e = 2.71 ...
-	
-	
