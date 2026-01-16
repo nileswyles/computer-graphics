@@ -18,7 +18,7 @@ The goal of this was to explore the mathematics behind 3D graphics. This module 
 * __Unit Circle/Vector__
 ### Euler's Formula! :)
 $$
-	r * e^{i\theta} = r * cos({\theta}) + r * isin({\theta})
+	r * e^{i\theta} = r * cos({\theta}) + r * i\,sin({\theta})
 $$
 $$
 	e = 2.71 \\
@@ -54,16 +54,17 @@ As the Z-distance increases, we want to scale the coordinate plane - which is de
 
 That being said, we can define the following relations:
 $$
-	min = sin(-\theta/2) * z \\
-	max = sin({\theta/2}) * z \\
+	min = sin(-\frac{\theta}{2}) * z
+$$
+$$
+	max = sin(\frac{\theta}{2}) * z
 $$
 $$
 	\theta = the \: fov \: angle \: in \: radians \\
 	z = z \: distance
 $$
-When projecting onto space, the __Object__ and __Field of View__ coordinate plane need to match. You can either choose to scale the relations defined above or the coordinates representing you're object to the Identity coordinate plane (perspective). Keep in mind you will also want to crop out any coordinates that are out of range, that is coordinates of the object not within the __Field of View__.
 
- The __Z Distance__ described so far is distance from the camera to center of object, since we have been thinking this in terms of a flat plane. The size of the object displayed is consequently a function of __Field of View Angle__ and __Z Distance__. 
+The __Z Distance__ described so far is the distance from the camera to center of the object. The effective size of the object displayed is consequently a function of __Field of View Angle__ and __Z Distance__. 
 ```
 	Identity is defined as when min = -1 and max = 1
 
@@ -74,7 +75,7 @@ When projecting onto space, the __Object__ and __Field of View__ coordinate plan
 	for example, fov of approx. 16 deg and z = 7 is also identity.
 ```
 
-The __Field of View__ calculation described above applies to both 3D and 2D space.
+When projecting onto space, the __Object__ and __Field of View__ coordinate plane need to match. You can either choose to scale the relations defined above or the coordinates representing you're object to the Identity coordinate plane (perspective). Keep in mind you will also want to crop out any coordinates that are out of range, that is coordinates of the object not within the __Field of View__.
 
 To expand on this further, we want to keep the math as simple as possible.
 	Let's not choose an arbitrary point in space for the math calculations - we decide to do maths relative to the reference point (__Focal Point__). Similarly, when projecting objects onto the space defined by the __Focal Point__ and __Field of View__, it doesn't make sense to complicate things and move both entities (__Focal Point__ and __Object__). I think regardless of how you get there (normalize object to space or space to object), it's important to think about this in two ways.
@@ -83,11 +84,11 @@ To expand on this further, we want to keep the math as simple as possible.
 2. Does the camera move?
 	- Do we tend to think of things moving away from the point of reference (us) instead of towards?
 
-It's effectively the same thing. Just perspective.
+It's effectively the same thing. Just perspective. I have a feeling this idea is especially important when working with multiple objects and perspectives.
 
-I have a feeling this idea is especially important when working with multiple objects and perspectives.
+The __Field of View__ calculation described above applies to both 3D and 2D space.
 
-### The 3D Rotations are Independent from the Field of View Calculation (kind of? for convinience?, resulting coordinates are normalized to the fov,)
+### 3D Rotations are Independent of the Field of View Calculation (kind of, for convenience? - resulting coordinates are normalized to the fov)
 In 3D space, the rotations are defined as 3 independent transformations.
 
 #### Glossary again
@@ -101,12 +102,13 @@ In 3D space, the rotations are defined as 3 independent transformations.
 #### Core Concept
 
 In this example, we represent an object in 3D space. Rotate the object in yaw and pitch, then normalize to field view. 
-This works, but I think might want to support multiple camera's field of views. right, so I mean I suppose I can recalculate the rotation for each fov are they coupled? Memoize and cross-section? The rotation is the cross-section calculation... okay. stable.
+This works, you might eventually want to support multiple camera's or field of views - which I think might require recalculating the object's cross-section.
 
 ##### Procedure
-1. perform rotation in yaw
-2. perform pitch rotation of *rotated yaw point(s)*
-3. perform roll rotation of *rotated pitch point(s)* (not supported in this example)
+1. Perform rotation in yaw
+2. Perform pitch rotation of *rotated yaw point(s)*
+3. Perform roll rotation of *rotated pitch point(s)* (not supported in this example)
+4. Normalize for the __Field of View__. This accounts for the distance from the __Focal Point__ which effectively affects the size of the object.
 
 ##### Matrix Notation
 
@@ -120,7 +122,7 @@ You know given that you generally want to specialize the problem (divide and con
 
 R-ggggg
 
-### 2D Rotations are a Less Complex but not a Specialization of the 3D Rotations (R-ggg)
+### 2D Rotations are a Less Complex but not a Specialization of 3D Rotations (R-ggg)
 #### Glossary again
 * __Rotation__
 	- In 2D space, if we think of the __Unit Circle__, a rotation is defined as a tranformation whereby a point is rotated about the origin as if it were tied with a string - think tetherball.
@@ -139,7 +141,7 @@ $$
 $$
 Rotation Angle
 $$
-{\pi}/2 \: rads = 90 \: degrees
+\frac{\pi}{2} \: rads = 90 \: degrees
 $$
 Point Representing Rotation Angle
 $$
@@ -153,7 +155,7 @@ We can look at it in many different ways. Let's explore that, I think that's wer
 	2. Sum the angles. 
 	3. Euler's Formula with summed angle to get each component.
 $$
-	e^{i\theta} = cos({\theta}) + isin({\theta})
+	e^{i\theta} = cos({\theta}) + i\,sin({\theta})
 $$
 
 2. __Vector Math__
@@ -212,7 +214,7 @@ y' = x * sin({\theta}) - y * cos({\theta})
 $$
 ###### All together now
 $$
-e^{i\theta} = cos({\theta}) + isin({\theta}) =
+e^{i\theta} = cos({\theta}) + i\,sin({\theta}) =
   \left[ {\begin{array}{cc}
     cos({\theta}) & -sin({\theta}) \\
     sin({\theta}) & cos({\theta}) \\

@@ -5,7 +5,7 @@ const cube = {
 	// parallel to XY-plane
 	FRONT: {
 		//color: [0.777, 0.214, 0.820, 1.0],
-		color: [1.0, 1.0, 1.0, 1.0],
+		color: [1.0, 1.0, 1.0, 1.0], // white
 		// X == -1 - 1 (LEFT - RIGHT)
 		// Y == -1 - 1 (BOTTOM - TOP)
 		// Z == -1 - 1 (BACK - FRONT)
@@ -21,7 +21,7 @@ const cube = {
 	},
 	BACK: {
 		//color: [0.777, 0.901, 0.820, 1.0],
-		color: [1.0, 0.0, 0.0, 1.0],
+		color: [1.0, 0.0, 0.0, 1.0], // red
 		// X == -1 - 1 (LEFT - RIGHT)
 		// Y == -1 - 1 (BOTTOM - TOP)
 		// Z == -1 - 1 (BACK - FRONT)
@@ -39,7 +39,7 @@ const cube = {
 	// parallel to YZ-plane
 	LEFT: {
 		//color: [0.27, 0.5, 0.37, 1.0],
-		color: [0.0, 1.0, 0.0, 1.0],
+		color: [0.0, 1.0, 0.0, 1.0], // green
 		// X == -1 - 1 (LEFT - RIGHT)
 		// Y == -1 - 1 (BOTTOM - TOP)
 		// Z == -1 - 1 (BACK - FRONT)
@@ -55,7 +55,7 @@ const cube = {
 	},
 	RIGHT: {
 		//color: [0.60, 1.0, 0.7, 1.0],
-		color: [0.0, 0.0, 1.0, 1.0],
+		color: [0.0, 0.0, 1.0, 1.0], // blue
 		positions: [
 			1.0, -1.0, 1.0,		
 			1.0, 1.0, 1.0,	
@@ -74,7 +74,7 @@ const cube = {
 		// Y == -1 - 1 (BOTTOM - TOP)
 		// Z == -1 - 1 (BACK - FRONT)
 		//color: [0.09, 0.28, 0.81, 1.0],
-		color: [1.0, 1.0, 0.0, 1.0],
+		color: [1.0, 1.0, 0.0, 1.0], // yellow
 		positions: [
 			-1.0, -1.0, 1.0,	
 			1.0, -1.0, 1.0,	
@@ -87,7 +87,7 @@ const cube = {
 	},
 	TOP: {
 		//color: [0.49, 0.58, 0.69, 1.0],
-		color: [1.0, 0.0, 1.0, 1.0],
+		color: [1.0, 0.0, 1.0, 1.0], // magenta
 		positions: [
 			-1.0, 1.0, 1.0,	
 			1.0, 1.0, 1.0,	
@@ -378,7 +378,6 @@ const draw = (object, z, xzangle, yzangle, pg) => {
 			surface_in_view.positions.push(rotated[2])
 		}
 		console.log(surface_in_view)
-		// TODO: need to prioritize surfaces closest to camera so minimize Z after rotation, so don't draw the surface immediately instead sort by Z distance
 		drawSurface(pg, surface_in_view)
 	}
 }
