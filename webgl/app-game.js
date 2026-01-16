@@ -18,7 +18,59 @@ const getRandomInRange = (min, max) => {
 	return Math.random() * (max-min) + min
 }
 
+// GLOBAL STATE
+
+const canvas = document.getElementById("canvas")
+const gl = canvas.getContext("webgl2")
+if (gl === null) {
+	alert("Unable to initialize WebGL. Checking your bearings.")
+}
+
+const NUM_DIMENSIONS = 2; // calculations are based on 2d maths
+const WORLD = {
+	//const WORLD.bound.left = -canvas.width/2
+	//const WORLD.bound.right = canvas.width/2
+	//const WORLD.bound.top = canvas.height/2
+	//const WORLD.bound.bottom = -canvas.height/2
+	bound: {
+		// TODO: global dims variable? group bounds by axis?
+		left: 0,
+		right: canvas.width,
+		top: canvas.height,
+		bottom: 0
+	},
+	ball: {
+		radius: 7,
+		velocity: [0, 0],
+		acceleration: [0, 0]
+	},
+	// example element
+	// "ArrowDown": [x, y] // acceleration vector 
+	key: {},
+}
+// defined this way because it relies on other WORLD state.
+// TODO: maybe use a class or init function to 'encapsulate' this better???
+WORLD.ball.position = [getRandomInRange(WORLD.bound.left + WORLD.ball.radius, WORLD.bound.right - WORLD.ball.radius), getRandomInRange(WORLD.bound.bottom + WORLD.ball.radius, WORLD.bound.top - WORLD.ball.radius)]
+
 // WEBGL
+
+function resizeCanvasToDisplaySize(canvas) {
+  // Lookup the size the browser is displaying the canvas in CSS pixels.
+  const displayWidth  = canvas.clientWidth;
+  const displayHeight = canvas.clientHeight;
+ 
+  // Check if the canvas is not the same size.
+  const needResize = canvas.width  !== displayWidth ||
+                     canvas.height !== displayHeight;
+ 
+  if (needResize) {
+    // Make the canvas the same size
+    canvas.width  = displayWidth;
+    canvas.height = displayHeight;
+  }
+ 
+  return needResize;
+}
 
 //
 // Initialize a shader program, so WebGL knows how to draw our data
@@ -75,14 +127,6 @@ function loadShader(gl, type, source) {
 	
 	return shader;
 }
-
-const canvas = document.getElementById("canvas")
-
-const gl = canvas.getContext("webgl2")
-if (gl === null) {
-	alert("Unable to initialize WebGL. Checking your bearings.")
-}
-	
 // Vertex shader program
 const vsSource = `
 	attribute vec4 a_position;
@@ -90,25 +134,6 @@ const vsSource = `
 	gl_Position = a_position;
 	}
 `;
-
-function resizeCanvasToDisplaySize(canvas) {
-  // Lookup the size the browser is displaying the canvas in CSS pixels.
-  const displayWidth  = canvas.clientWidth;
-  const displayHeight = canvas.clientHeight;
- 
-  // Check if the canvas is not the same size.
-  const needResize = canvas.width  !== displayWidth ||
-                     canvas.height !== displayHeight;
- 
-  if (needResize) {
-    // Make the canvas the same size
-    canvas.width  = displayWidth;
-    canvas.height = displayHeight;
-  }
- 
-  return needResize;
-}
-
 const fsSource = `
 	void main() {
 	gl_FragColor = vec4(0.34, 1.0, 0.87, 1.0);
@@ -119,14 +144,7 @@ const fsSource = `
 const program = initShaderProgram(gl, vsSource, fsSource);
 
 console.log(`${gl.canvas.width}, ${gl.canvas.height} BLAH`);
-
 console.log(`${window.innerWidth}, ${window.innerHeight}`)
-
-//canvas.clientWidth = window.innerWidth
-//canvas.clientHeight = window.innerHeight
-//
-//canvas.style = `height: ${window.innerHeight - 27}px; width: ${window.innerWidth - 27}px` // because scrollbar
-
 resizeCanvasToDisplaySize(gl.canvas);
 console.log(`${gl.canvas.width}, ${gl.canvas.height} BLAH BLAH`);
 gl.viewport(0, 0, canvas.width, canvas.height);
@@ -136,7 +154,6 @@ gl.viewport(0, 0, canvas.width, canvas.height);
 const drawShape = (angle_delta, scale_factor, origin) => {
 	var position = origin
 	var angle = 0
-	// TODO: global dims variable?
 	var i = 2
 	//console.log(`${position} scalefactor: ${scale_factor}`)
 	while (angle < 2*Math.PI + angle_delta) {
@@ -158,7 +175,7 @@ const drawFrame = () => {
 	gl.bindBuffer(gl.ARRAY_BUFFER, positionBuffer);
 	gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(positions), gl.STATIC_DRAW);
 	positionAttributeLocation = gl.getAttribLocation(program, "a_position")
-	const numComponents = 2; // pull out 2 values per iteration, // 2D space so 2 components?
+	const numComponents = NUM_DIMENSIONS; // pull out 2 values per iteration, // 2D space so 2 components
 	const type = gl.FLOAT; // the data in the buffer is 32bit floats
 	const stride = 0; // how many bytes to get from one set of values to the next
 	// 0 = use type and numComponents above
@@ -174,33 +191,6 @@ const drawFrame = () => {
 	gl.useProgram(program);
 	gl.drawArrays(gl.TRIANGLE_FAN, 0, positions.length/numComponents);
 }
-
-// GLOBAL STATE
-
-const WORLD = {
-	//const WORLD.bound.left = -canvas.width/2
-	//const WORLD.bound.right = canvas.width/2
-	//const WORLD.bound.top = canvas.height/2
-	//const WORLD.bound.bottom = -canvas.height/2
-	bound: {
-		// TODO: global dims variable? group bounds by axis?
-		left: 0,
-		right: canvas.width,
-		top: canvas.height,
-		bottom: 0
-	},
-	ball: {
-		radius: 7,
-		velocity: [0, 0],
-		acceleration: [0, 0]
-	},
-	// example element
-	// "ArrowDown": [x, y] // acceleration vector 
-	key: {},
-}
-// lol... because relies on other WORLD state.
-// TODO: maybe use a class or init function to 'encapsulate' this better???
-WORLD.ball.position = [getRandomInRange(WORLD.bound.left + WORLD.ball.radius, WORLD.bound.right - WORLD.ball.radius), getRandomInRange(WORLD.bound.bottom + WORLD.ball.radius, WORLD.bound.top - WORLD.ball.radius)]
 
 // TODO:
 // 	ASPECT RATIO ADJUST
@@ -292,8 +282,6 @@ var TICKS = 0
 const tick = (t) => {
 	//console.log(`${WORLD.bound.bottom}, ${WORLD.bound.top}, ${WORLD.bound.left}, ${WORLD.bound.right}, ${position_vector}, ${WORLD.ball.velocity}`)
 	
-	// TODO: 
-	// pass state by value instead of global variable?
 	drawFrame(WORLD.ball.position)
 
 	// check key state, to get direction... update acceleration vector 
@@ -310,13 +298,11 @@ const tick = (t) => {
 			// 	define, different accel curves?
 			//  requires updating the global per-key acceleration vector?
 		}
-		// TODO: global dims variable?
-		WORLD.ball.acceleration = vecAdd(WORLD.ball.acceleration, acceleration_delta, 2)
+		WORLD.ball.acceleration = vecAdd(WORLD.ball.acceleration, acceleration_delta, NUM_DIMENSIONS)
 		TICKS = 0
 	}
-	// TODO: global dims variable?
-	WORLD.ball.velocity = vecAdd(WORLD.ball.velocity, WORLD.ball.acceleration, 2)
-	WORLD.ball.position = vecAdd(WORLD.ball.position, WORLD.ball.velocity, 2)
+	WORLD.ball.velocity = vecAdd(WORLD.ball.velocity, WORLD.ball.acceleration, NUM_DIMENSIONS)
+	WORLD.ball.position = vecAdd(WORLD.ball.position, WORLD.ball.velocity, NUM_DIMENSIONS)
 	// if out of bounds, set position to bounds
 	// TODO:
 	// 		expected behaviour is edge of circle on edge of screen, but not the case for some reason... scaling issue? 

@@ -378,6 +378,7 @@ const draw = (object, z, xzangle, yzangle, pg) => {
 			surface_in_view.positions.push(rotated[2])
 		}
 		console.log(surface_in_view)
+		// TODO: need to prioritize surfaces closest to camera so minimize Z after rotation, so don't draw the surface immediately instead sort by Z distance
 		drawSurface(pg, surface_in_view)
 	}
 }
@@ -389,8 +390,42 @@ window.addEventListener("change", (event) => {
 	}
 })
 
-document.addEventListener("mousemove", logKey);
+window.addEventListener(
+  "keydown",
+  (event) => {
+    if (event.defaultPrevented) {
+      return; // Do nothing if the event was already processed
+    }
+	const delta_delta = 17
+	let delta_x = 0
+	let delta_y = 0
+    switch (event.key) {
+      case "ArrowDown":
+		delta_y = -delta_delta
+        break;
+      case "ArrowUp":
+		delta_y = delta_delta
+        break;
+      case "ArrowLeft":
+		delta_x = -delta_delta
+        break;
+      case "ArrowRight":
+		delta_x = delta_delta
+        break;
+      default:
+        return; // Quit when this doesn't handle the key event.
+    }
+	document.getElementById("xzangle").value = `${document.getElementById("xzangle").valueAsNumber + delta_x}`
+	document.getElementById("yzangle").value = `${document.getElementById("yzangle").valueAsNumber + delta_y}`
+	handleDrawEvent(cube)
+    // Cancel the default action to avoid it being handled twice
+    event.preventDefault();
+  },
+  false,
+);
 
+/* Uncomment this out to enable mouse based control
+// document.addEventListener("mousemove", logKey);
 var previous_x = 0
 var previous_y = 0
 function logKey(e) {
@@ -407,5 +442,6 @@ function logKey(e) {
 
 	}
 }
+*/
 
 handleDrawEvent(cube)
