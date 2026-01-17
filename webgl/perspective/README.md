@@ -12,7 +12,8 @@ The goal of this was to explore the mathematics behind 3D graphics. This module 
 	- Loss of degrees of freedom. Occurs when axes are aligned and become parallel to each other. Resolved by reset? or adding an extra degree of freedom (Quats).
 		- i.e. When the pitch (xz) and yaw (yz) gimbals become aligned, changes to roll (xy) and yaw (yz) apply the same rotation to the airplane. Given the following order of rotations, roll, yaw, pitch? or pitch, yaw, roll? --- you get the idea.
 * __Quaternions__
-	- Basically polar coordinate (complex number) notation of more than 2D space. Can be used to perform some interesting maths. "Specifically, they encode information about an axis-angle rotation about an arbitrary axis." 
+	- Basically, complex number (polar coordinate) notation of more than 2D space. Can be used to perform some interesting maths. They encode information about a vector in 3D space.
+		* According to Wikipedia, formally defined as providing a definition of the quotient of two vectors? * - See TODO's
 * __Rotation Matrices__
 * __Rotation Vectors__
 * __Unit Circle/Vector__
@@ -64,65 +65,30 @@ $$
 	z = z \: distance
 $$
 
-The __Z Distance__ described so far is the distance from the camera to center of the object. The effective size of the object displayed is consequently a function of __Field of View Angle__ and __Z Distance__. 
+The __Z Distance__ described so far is the distance from the camera to center of the object. The effective size of the object displayed is consequently a of said __Z Distance__.
 ```
-	Identity is defined as when min = -1 and max = 1
+Identity is defined as when min = -1 and max = 1
 
-	this means, a fov of 180 deg and z = 1 is identity.
-		y = sin(fov) * z =  1
-		fov = arcsin(1/z) * 2 = 90 degrees * 2
+this means, a fov of 180 deg and z = 1 is identity.
+	y = sin(fov) * z =  1
+	fov = arcsin(1/z) * 2 = 90 degrees * 2
 
-	for example, fov of approx. 16 deg and z = 7 is also identity.
+for example, fov of approx. 16 deg and z = 7 is also identity.
 ```
 
-When projecting onto space, the __Object__ and __Field of View__ coordinate plane need to match. You can either choose to scale the relations defined above or the coordinates representing you're object to the Identity coordinate plane (perspective). Keep in mind you will also want to crop out any coordinates that are out of range, that is coordinates of the object not within the __Field of View__.
+When projecting onto space, the __Object__ and __Field of View__ coordinate plane need to match. You can either choose to scale the __Field of View__ space defined above or the coordinates representing you're object. Keep in mind you will also want to crop out any coordinates that are out of range, that is coordinates of the object not within the __Field of View__.
 
-To expand on this further, we want to keep the math as simple as possible.
-	Let's not choose an arbitrary point in space for the math calculations - we decide to do maths relative to the reference point (__Focal Point__). Similarly, when projecting objects onto the space defined by the __Focal Point__ and __Field of View__, it doesn't make sense to complicate things and move both entities (__Focal Point__ and __Object__). I think regardless of how you get there (normalize object to space or space to object), it's important to think about this in two ways.
+Generally, the goal is to keep the math as simple as possible. Let's not choose an arbitrary point in space for the math calculations - we decide to do maths relative to the reference point (__Focal Point__). Similarly, when projecting objects onto the space defined by the __Focal Point__ and __Field of View__, it doesn't make sense to complicate things and move both entities (__Focal Point__ and __Object__). I think regardless of how you get there (normalize object to space or space to object), it's important to think about this in two ways.
 1. Does the object move?
 	- Most probably see it this way, at least originally?
 2. Does the camera move?
 	- Do we tend to think of things moving away from the point of reference (us) instead of towards?
 
-It's effectively the same thing. Just perspective. I have a feeling this idea is especially important when working with multiple objects and perspectives.
+It's effectively the same thing. Just perspective. This idea is especially important when working with multiple objects and perspectives.
 
 The __Field of View__ calculation described above applies to both 3D and 2D space.
 
-### 3D Rotations are Independent of the Field of View Calculation (kind of, for convenience? - resulting coordinates are normalized to the fov)
-In 3D space, the rotations are defined as 3 independent transformations.
-
-#### Glossary again
-* __Yaw trick Yaw__
-	- Represents the rotation angle between two planes, in 3D space. It can be arbitrarily defined, but in the code, I chose to define it as the angle between the X and Z planes. 
-* __Pitch__
-	- Represents the rotation angle between two planes, in 3D space. It can be arbitrarily defined, but in the code, I chose to define it as the angle between the Y and Z planes. 
-* __Roll__
-	- Represents the rotation angle between two planes, in 3D space. It can be arbitrarily defined, but in the code, I chose to define it as the angle between the X and Y planes. 
-
-#### Core Concept
-
-In this example, we represent an object in 3D space. Rotate the object in yaw and pitch, then normalize to field view. 
-This works, you might eventually want to support multiple camera's or field of views - which I think might require recalculating the object's cross-section.
-
-##### Procedure
-1. Perform rotation in yaw
-2. Perform pitch rotation of *rotated yaw point(s)*
-3. Perform roll rotation of *rotated pitch point(s)* (not supported in this example)
-4. Normalize for the __Field of View__. This accounts for the distance from the __Focal Point__ which effectively affects the size of the object.
-
-##### Matrix Notation
-
-See [Rotation Matrix (Wikipedia)](https://en.wikipedia.org/wiki/Rotation_matrix)
-
-##### Lessons Learned
-
-I was originally trying to derive the rotation matrix stuff from scratch ("B-eulerrrrr"). That didn't go very well. I forget exactly what was missing but I think it was a matter of perspective, gimbal locking? Some folding of the third dimension? 
-
-You know given that you generally want to specialize the problem (divide and conquer). I thought I would be clever and represent the 3D cube in 2D space (where each surface is connected to the adjacent surface) - that didn't work obviously? - need the information the third dimension provides.
-
-R-ggggg
-
-### 2D Rotations are a Less Complex but not a Specialization of 3D Rotations (R-ggg)
+### 2D Rotations Make Up The Relevant Parts of a 3D Rotation
 #### Glossary again
 * __Rotation__
 	- In 2D space, if we think of the __Unit Circle__, a rotation is defined as a tranformation whereby a point is rotated about the origin as if it were tied with a string - think tetherball.
@@ -165,15 +131,15 @@ $$
 You can start from the vector representing the rotation angle (1) or the original vector (2):
 In both instances, you want to basically get the vector's (fixed) value based on the coordinate system of the other where the other vector is equal to [-1, 0].
 
-1. To normalize to get from [0, 1] to [-1, 0]: [-1, -1] -> [-0.5, -0.5] then normalize to the unit circle based on the range of transformation or get 360 - angle using __Euler's Formula__... same thing. The resulting (normalized) vector should contain an angle where 360 - angle is the vector along the unit circle that we expect.
-2. To normalize to get from [0.5, 0.5] to [-1, 0]: [-1.5, -0.5] -> [-1.5, 1.5] then normalize to unit circle based on range of the tranformation or get the angle using __Euler's Formula__. The resulting (normalized) vector is the vector along the unit circle that we expect.
+1. To normalize to get from [0, 1] to [-1, 0]: [-1, -1] -> [-0.5, -0.5] then normalize to the unit circle using Pythagorean's theorem (Cartesian) or get 360 - angle using __Euler's Formula__ (Polar) - it's effectively the same thing. The resulting (normalized) vector should contain an angle where 360 - angle is the vector along the unit circle that we expect.
+2. To normalize to get from [0.5, 0.5] to [-1, 0]: [-1.5, -0.5] -> [-1.5, 1.5] then normalize to the unit circle using Pythagorean's theorem or get the angle using __Euler's Formula__. The resulting (normalized) vector is the vector along the unit circle that we expect.
 ```
 $$
 x' = x * cos({\theta}) - y * sin({\theta}) \\
 y' = x * sin({\theta}) - y * cos({\theta})
 $$
-In summary, the contribution to either component is a function of the angle of the original vector. 
-Again, the inverse will also work, it's a matter of defining coordinate planes in a convenient way to simplify the problem. You can also, get the value of the rotation vector based on the original vector's coordinate plane. (360 - New Angle).
+In summary, the contribution to either component of the resulting vector is a function of the angle of the original vector. \
+Again, the inverse will also work, you can also get the value of the rotation vector based on the original vector's coordinate plane. (360 - New Angle). It's a matter of defining coordinate planes in a convenient way to simplify the problem.
 
 3. __The Rotation Matrix__
 $$
@@ -191,7 +157,7 @@ $$
 \end{array} } \right] 
 $$
 
-Again, these are expressing the same idea in different notation. I think it's important to provide perspective. Another interesting tidbit is that you can also think of this purely geometrically - drawing triangles in open space and in a convienient way, leveraging basic triangle properties and the pythagorean theorem. Very similar to option 1.
+Again, these are expressing the same idea in different notation. I think it's important to provide perspective. Another interesting tidbit is that you can also think of this purely geometrically - drawing triangles in open space and in a convienient way - leveraging basic triangle properties and Pythagorean's theorem (without using __Euler's Formula__ directly).
 
 ##### Relevant Notation
 $$
@@ -221,6 +187,40 @@ e^{i\theta} = cos({\theta}) + i\,sin({\theta}) =
   \end{array} } \right]
 $$
 
+### 3D Rotations are Independent of the Field of View Calculation (kind of, for convenience? - resulting coordinates are normalized to the fov)
+In 3D space, the rotations are defined as 3 independent transformations.
+
+#### Glossary again
+* __Yaw__
+	- Represents the rotation angle between two planes, in 3D space. It can be arbitrarily defined, but in the code, I chose to define it as the angle between the X and Z planes. 
+* __Pitch__
+	- Represents the rotation angle between two planes, in 3D space. It can be arbitrarily defined, but in the code, I chose to define it as the angle between the Y and Z planes. 
+* __Roll__
+	- Represents the rotation angle between two planes, in 3D space. It can be arbitrarily defined, but in the code, I chose to define it as the angle between the X and Y planes. 
+
+#### Core Concept
+
+In this example, we represent an object in 3D space. Rotate the object in yaw and pitch, then normalize to field of view. 
+This works, you might eventually want to support multiple camera's or field of views - which I think might require recalculating the object's cross-section.
+
+##### Procedure
+1. Perform rotation in __Yaw__
+2. Perform __Pitch__ rotation of *rotated yaw point(s)*
+3. Perform __Roll__ rotation of *rotated pitch point(s)* (not supported in this example)
+4. Normalize for the __Field of View__. This accounts for the distance from the __Focal Point__ which effectively affects the size of the object.
+
+##### Matrix Notation
+
+See [Rotation Matrix (Wikipedia)](https://en.wikipedia.org/wiki/Rotation_matrix)
+
+##### Lessons Learned
+
+The code leverages the rotation matrix defined in Wikipedia. I was originally trying to derive the rotation code stuff from scratch ("B-eulerrrrr"). That didn't go very well. I forget exactly what was wrong - I think it had something to do with how the object was being represented in space. Maybe it had something to do with perspective?, gimbal locking? some folding of the third dimension?
+
+Was the model always a 3D model?
+
+You know given that you generally want to specialize the problem (divide and conquer). I thought I would be clever and represent the 3D cube in 2D space (where each surface is connected to the adjacent surface) - that didn't work, (obviously?) - need the information the third dimension provides.
+
 ## Misc. Notes
 
 3D Rotation - Need to figure out why rotation matrix defined is producing the rotated point when multiplied by the original point instead of a rotation vector as described by "Wikipedia" and my testing in 2D space lol... Just another way of describing the rotation? probably. but why isn't it consistent?
@@ -232,3 +232,4 @@ Such a vivrant thingg....
 
 ## TODO
 More exercises and testing using euler angles and rotation matricies.
+More on Quaternions and the extra dimension.
