@@ -65,7 +65,7 @@ $$
 	z = z \: distance
 $$
 
-The __Z Distance__ described so far is the distance from the camera to center of the object. The effective size of the object displayed is consequently a of said __Z Distance__.
+The __Z Distance__ described so far is the distance from the camera to center of the object. The effective size of the object displayed is consequently a function of said __Z Distance__.
 ```
 Identity is defined as when min = -1 and max = 1
 
@@ -115,31 +115,38 @@ $$
 $$
 
 
-We can look at it in many different ways. Let's explore that, I think that's were the magic is here.
+We can look at it in many different ways. Let's explore that, I think that's where the magic is here.
 1. __Polar Coordinates Angles and Euler's Formula__
-	1. We can use euler's formula (soh,cah,toa) to get the angle of the original point, 
-	2. Sum the angles. 
-	3. Euler's Formula with summed angle to get each component.
+	1. We can use the properties of a triangle (soh, cah, toa) to get the angle of the original point relative to origin. 
+	2. Sum the angles.
+	3. Leverage Euler's Formula with the summed angle to get each component.
 $$
 	e^{i\theta} = cos({\theta}) + i\,sin({\theta})
 $$
 
-2. __Vector Math__
-	1. Define the a new vector which represents the rotation from the initial angle of zero.
-	2. Vector addition in order (from tip of other). 
+2. __Vector Math and 'Reference' Planes__
+	1. Define a new vector which represents the rotation from the initial angle of zero.
+	2. You can start from the vector representing the rotation angle (1) or the original vector (2). In both instances, you want to basically get the vector's (fixed) value based on the coordinate system of the other where the other vector is equal to [-1, 0]. ____
 ```
-You can start from the vector representing the rotation angle (1) or the original vector (2):
-In both instances, you want to basically get the vector's (fixed) value based on the coordinate system of the other where the other vector is equal to [-1, 0].
+Let's forget about Euler's identity and the Unit Circle and think in terms of triangles.  
 
 1. To normalize to get from [0, 1] to [-1, 0]: [-1, -1] -> [-0.5, -0.5] then normalize to the unit circle using Pythagorean's theorem (Cartesian) or get 360 - angle using __Euler's Formula__ (Polar) - it's effectively the same thing. The resulting (normalized) vector should contain an angle where 360 - angle is the vector along the unit circle that we expect.
 2. To normalize to get from [0.5, 0.5] to [-1, 0]: [-1.5, -0.5] -> [-1.5, 1.5] then normalize to the unit circle using Pythagorean's theorem or get the angle using __Euler's Formula__. The resulting (normalized) vector is the vector along the unit circle that we expect.
+
+This gives us an approximation of the angle, (*you might be able to apply some calculus, leverage reimann sums?*) to better approximate but again not without avoiding some prior definition of I think the sine function?
+
+In the real world, it's a similar idea just in terms of how circle's work. Instead of a straight C, the notation below encapsulates the a circular path for a given angle.
+
+The above just provides some more intuition behind why that works.
+
+** I'm pretty sure you don't need calculus to derive the notation below... TBD... I'm missing some secret sauce - idk what it is... **
 ```
 $$
 x' = x * cos({\theta}) - y * sin({\theta}) \\
 y' = x * sin({\theta}) - y * cos({\theta})
 $$
-In summary, the contribution to either component of the resulting vector is a function of the angle of the original vector. \
-Again, the inverse will also work, you can also get the value of the rotation vector based on the original vector's coordinate plane. (360 - New Angle). It's a matter of defining coordinate planes in a convenient way to simplify the problem.
+In summary, the contribution to either component of the resulting vector is a function of the angle of the original vector - which through Euler's Formula and Elementary Geometry you can you can represent as n-components which make up some vector in n-dimensional space. (sounds cool!) \
+Again, the inverse will also work, you can also get the value of the rotation vector based on the original vector's coordinate plane. (360 - New Angle). It's important to understand that it's a matter of defining coordinate planes in a convenient way to simplify the problem.
 
 3. __The Rotation Matrix__
 $$
@@ -157,7 +164,7 @@ $$
 \end{array} } \right] 
 $$
 
-Again, these are expressing the same idea in different notation. I think it's important to provide perspective. Another interesting tidbit is that you can also think of this purely geometrically - drawing triangles in open space and in a convienient way - leveraging basic triangle properties and Pythagorean's theorem (without using __Euler's Formula__ directly).
+Again, these are expressing the same idea in different notation. I think it's important to provide perspective.
 
 ##### Relevant Notation
 $$
